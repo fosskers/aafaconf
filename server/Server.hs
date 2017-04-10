@@ -21,18 +21,23 @@ import           System.Posix.Signals hiding (Handler)
 
 type API = "signin" :> Get '[HTML] B.ByteString
   :<|> "register" :> Get '[HTML] B.ByteString
+  :<|> "register" :> ReqBody '[JSON] Person :> Post '[JSON] ()
 
 api :: Proxy API
 api = Proxy
 
-server :: Server API
-server = file "signin.html" :<|> file "register.html"
+server :: Env -> Server API
+server env = file "signin.html" :<|> file "register.html" :<|> reg env
 
-app :: Application
-app = serve api server
+app :: Env -> Application
+app = serve api . server
 
+-- | Given a filepath, yield its contents as @text/html@.
 file :: FilePath -> Handler B.ByteString
 file = liftIO . B.readFile
+
+reg :: Env -> Person -> Handler ()
+reg env p = liftIO $ register (conn env) p
 
 main :: IO ()
 main = do
@@ -43,4 +48,4 @@ main = do
   tid <- myThreadId
   let h = close conn >> putStrLn "Shutting down." >> E.throwTo tid ExitSuccess
   installHandler keyboardSignal (Catch h) Nothing
-  W.run 8081 app
+  W.run 8081 (app $ Env conn)

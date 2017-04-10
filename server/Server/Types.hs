@@ -1,20 +1,27 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
 module Server.Types
   ( -- * HTTP
     HTML
     -- * Database Types
   , Person(..)
+    -- * Runtime Environment
+  , Env(..)
   ) where
 
+import           Data.Aeson
 import qualified Data.ByteString.Lazy as B
 import           Data.Text (Text)
 import           Database.SQLite.Simple
+import           GHC.Generics
 import qualified Network.HTTP.Media as M
 import           Servant.API
 
 ---
+
+data Env = Env { conn :: Connection }
 
 -- | The Content-Type @text/html@.
 data HTML
@@ -26,11 +33,11 @@ instance MimeRender HTML B.ByteString where
   mimeRender _ = id
 
 -- | An attendee of the conference.
-data Person = Person { _id :: Int
-                     , _fname :: Text
-                     , _lname :: Text
-                     , _city :: Text
-                     , _company :: Text }
+data Person = Person { uuid    :: Int
+                     , fname   :: Text
+                     , lname   :: Text
+                     , city    :: Text
+                     , company :: Text } deriving (Generic, FromJSON)
 
 instance FromRow Person where
   fromRow = Person <$> field <*> field <*> field <*> field <*> field

@@ -4,6 +4,7 @@
 module Server.Database where
 
 import Database.SQLite.Simple
+import Server.Types
 import Text.Printf.TH
 
 ---
@@ -12,9 +13,13 @@ import Text.Printf.TH
 wake :: Connection -> IO ()
 wake c = execute_ c $ Query [st|
 CREATE TABLE IF NOT EXISTS people (
-id INTEGER PRIMARY KEY,
+uuid INTEGER PRIMARY KEY,
 first_name TEXT,
 last_name TEXT,
 city TEXT,
 company TEXT
 );|]
+
+-- | Register a new attendee.
+register :: Connection -> Person -> IO ()
+register c p = execute c "INSERT INTO people (uuid, first_name, last_name, city, company) values (?, ?, ?, ?, ?)" p
