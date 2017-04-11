@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
 module Server.Types
   ( -- * HTTP
     HTML
     -- * Database Types
   , Person(..)
+--  , Registration
     -- * Runtime Environment
   , Env(..)
   ) where
@@ -15,7 +15,6 @@ import           Data.Aeson
 import qualified Data.ByteString.Lazy as B
 import           Data.Text (Text)
 import           Database.SQLite.Simple
-import           GHC.Generics
 import qualified Network.HTTP.Media as M
 import           Servant.API
 
@@ -33,14 +32,30 @@ instance MimeRender HTML B.ByteString where
   mimeRender _ = id
 
 -- | An attendee of the conference.
-data Person = Person { uuid    :: Int
-                     , fname   :: Text
-                     , lname   :: Text
-                     , city    :: Text
-                     , company :: Text } deriving (Generic, FromJSON)
+data Person = Person { uuid     :: Int
+                     , fname    :: Text
+                     , lname    :: Text
+                     , city     :: Text
+                     , company  :: Text
+                     , blockA   :: Maybe Text
+                     , blockB   :: Maybe Text
+                     , blockC   :: Maybe Text
+                     , thirdDay :: Bool }
+
+instance FromJSON Person where
+  parseJSON (Object v) = Person
+    <$> v .:  "uuid"
+    <*> v .:  "fname"
+    <*> v .:  "lname"
+    <*> v .:  "city"
+    <*> v .:  "company"
+    <*> v .:? "blockA"
+    <*> v .:? "blockB"
+    <*> v .:? "blockC"
+    <*> v .:? "thirdDay" .!= False
 
 instance FromRow Person where
-  fromRow = Person <$> field <*> field <*> field <*> field <*> field
+  fromRow = Person <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 instance ToRow Person where
-  toRow (Person i fn ln ci co) = toRow (i, fn, ln, ci, co)
+  toRow (Person uu fn ln ci co ba bb bc td) = toRow (uu, fn, ln, ci, co, ba, bb, bc, td)
