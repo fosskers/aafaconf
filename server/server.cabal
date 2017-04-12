@@ -8,10 +8,8 @@ build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
-executable server
-  main-is:             Server.hs
-
-  other-modules:       Server.Database
+library
+  exposed-modules:     Server.Database
                      , Server.Types
 
   build-depends:       base >=4.9 && <4.10
@@ -23,9 +21,36 @@ executable server
                      , sqlite-simple >= 0.4 && < 0.5
                      , text
                      , th-printf >= 0.3 && < 0.4
+
+  hs-source-dirs:      lib
+  default-language:    Haskell2010
+  ghc-options: -fwarn-unused-imports -fwarn-unused-binds
+
+executable aafa-server
+  main-is:             Server.hs
+
+  build-depends:       base >=4.9 && <4.10
+                     , aeson >= 1.0 && < 1.1
+                     , bytestring
+                     , servant >= 0.9 && < 0.10
+                     , servant-server >= 0.9 && < 0.10
+                     , server
+                     , sqlite-simple >= 0.4 && < 0.5
+                     , text
+                     , th-printf >= 0.3 && < 0.4
                      , warp >= 3.2 && < 3.3
                      , unix
 
   default-language:    Haskell2010
+  ghc-options: -fwarn-unused-imports -fwarn-unused-binds -threaded
 
+test-suite server-test
+  type:                exitcode-stdio-1.0
+
+  build-depends:       base >= 4.9 && < 4.10
+                     , server
+
+  hs-source-dirs:      test
+  main-is:             Test.hs
+  default-language:    Haskell2010
   ghc-options: -fwarn-unused-imports -fwarn-unused-binds -threaded
