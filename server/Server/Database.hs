@@ -26,4 +26,14 @@ third_day BOOLEAN
 
 -- | Register a new attendee.
 register :: Connection -> Person -> IO ()
-register c p = execute c "INSERT INTO people (uuid, first_name, last_name, city, company, blockA, blockB, blockC, third_day) values (?, ?, ?, ?, ?, ?, ?, ?, ?)" p
+register c p = execute c q p
+  where q = Query [st|
+INSERT INTO people (
+uuid, first_name, last_name, city, company, blockA, blockB, blockC, third_day
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+|]
+
+-- | Mark the `Person` who corresponds to the given UUID as "present" for
+-- the third day.
+signin :: Connection -> Int -> IO ()
+signin c uuid = execute c "UPDATE people SET third_day = 1 WHERE uuid = ?" $ Only uuid
