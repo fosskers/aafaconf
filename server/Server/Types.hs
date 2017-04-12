@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
 module Server.Types
   ( -- * HTTP
@@ -15,6 +16,7 @@ import           Data.Aeson
 import qualified Data.ByteString.Lazy as B
 import           Data.Text (Text)
 import           Database.SQLite.Simple
+import           GHC.Generics
 import qualified Network.HTTP.Media as M
 import           Servant.API
 
@@ -40,7 +42,7 @@ data Person = Person { uuid     :: Int
                      , blockA   :: Maybe Text
                      , blockB   :: Maybe Text
                      , blockC   :: Maybe Text
-                     , thirdDay :: Bool }
+                     , thirdDay :: Bool } deriving (Generic, ToJSON)
 
 instance FromJSON Person where
   parseJSON (Object v) = Person

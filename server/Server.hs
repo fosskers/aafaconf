@@ -21,9 +21,9 @@ import           System.Posix.Signals hiding (Handler)
 
 type API =
        "signin"   :> Get '[HTML] B.ByteString
-  :<|> "signin"   :> ReqBody '[JSON] Int    :> Post '[JSON] ()
+  :<|> "signin"   :> ReqBody '[JSON] Int    :> Post '[JSON] Int
   :<|> "register" :> Get '[HTML] B.ByteString
-  :<|> "register" :> ReqBody '[JSON] Person :> Post '[JSON] ()
+  :<|> "register" :> ReqBody '[JSON] Person :> Post '[JSON] Person
 
 api :: Proxy API
 api = Proxy
@@ -38,11 +38,11 @@ app = serve api . server
 file :: FilePath -> Handler B.ByteString
 file = liftIO . B.readFile
 
-reg :: Env -> Person -> Handler ()
-reg env = liftIO . register (conn env)
+reg :: Env -> Person -> Handler Person
+reg env p = liftIO (register (conn env) p) >> pure p
 
-sign :: Env -> Int -> Handler ()
-sign env = liftIO . signin (conn env)
+sign :: Env -> Int -> Handler Int
+sign env uuid = liftIO (signin (conn env) uuid) >> pure uuid
 
 main :: IO ()
 main = do
