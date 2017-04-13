@@ -1,59 +1,71 @@
-name:                server
-version:             0.1.0.0
-license:             BSD3
-license-file:        LICENSE
-author:              Colin Woodbury
-maintainer:          colingw@gmail.com
-build-type:          Simple
-extra-source-files:  ChangeLog.md
-cabal-version:       >=1.10
+-- This file has been generated from package.yaml by hpack version 0.17.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           server
+version:        0.1.0.0
+author:         Colin Woodbury
+maintainer:     colingw@gmail.com
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    ChangeLog.md
 
 library
-  exposed-modules:     Server.Database
-                     , Server.Types
-
-  build-depends:       base >=4.9 && <4.10
-                     , aeson >= 1.0 && < 1.1
-                     , bytestring
-                     , http-media >= 0.6 && < 0.7
-                     , servant >= 0.9 && < 0.10
-                     , servant-server >= 0.9 && < 0.10
-                     , sqlite-simple >= 0.4 && < 0.5
-                     , text
-                     , th-printf >= 0.3 && < 0.4
-
-  hs-source-dirs:      lib
-  default-language:    Haskell2010
+  hs-source-dirs:
+      lib
   ghc-options: -fwarn-unused-imports -fwarn-unused-binds
+  build-depends:
+      base >=4.9 && <4.10
+    , aeson >=1.0 && <1.1
+    , bytestring
+    , servant >=0.9 && <0.10
+    , servant-server >=0.9 && <0.10
+    , sqlite-simple >=0.4 && <0.5
+    , text
+    , th-printf >=0.3 && <0.4
+    , http-media >=0.6 && <0.7
+  exposed-modules:
+      Server.Database
+      Server.Types
+  default-language: Haskell2010
 
 executable aafa-server
-  main-is:             Server.hs
-
-  build-depends:       base >=4.9 && <4.10
-                     , aeson >= 1.0 && < 1.1
-                     , bytestring
-                     , servant >= 0.9 && < 0.10
-                     , servant-server >= 0.9 && < 0.10
-                     , server
-                     , sqlite-simple >= 0.4 && < 0.5
-                     , text
-                     , th-printf >= 0.3 && < 0.4
-                     , warp >= 3.2 && < 3.3
-                     , unix
-
-  default-language:    Haskell2010
+  main-is: Server.hs
   ghc-options: -fwarn-unused-imports -fwarn-unused-binds -threaded
+  build-depends:
+      base >=4.9 && <4.10
+    , aeson >=1.0 && <1.1
+    , bytestring
+    , servant >=0.9 && <0.10
+    , servant-server >=0.9 && <0.10
+    , sqlite-simple >=0.4 && <0.5
+    , text
+    , th-printf >=0.3 && <0.4
+    , server
+    , warp >=3.2 && <3.3
+    , unix
+  default-language: Haskell2010
 
 test-suite server-test
-  type:                exitcode-stdio-1.0
-
-  build-depends:       base >= 4.9 && < 4.10
-                     , tasty >= 0.11 && < 0.12
-                     , tasty-hunit >= 0.9 && < 0.10
-                     , server
-                     , sqlite-simple
-
-  hs-source-dirs:      test
-  main-is:             Test.hs
-  default-language:    Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: Test.hs
+  hs-source-dirs:
+      test
   ghc-options: -fwarn-unused-imports -fwarn-unused-binds -threaded
+  build-depends:
+      base >=4.9 && <4.10
+    , aeson >=1.0 && <1.1
+    , bytestring
+    , servant >=0.9 && <0.10
+    , servant-server >=0.9 && <0.10
+    , sqlite-simple >=0.4 && <0.5
+    , text
+    , th-printf >=0.3 && <0.4
+    , tasty >=0.11 && <0.12
+    , tasty-hunit >=0.9 && <0.10
+    , server
+  default-language: Haskell2010

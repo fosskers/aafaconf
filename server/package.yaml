@@ -1,0 +1,47 @@
+name: server
+version: '0.1.0.0'
+author: Colin Woodbury
+maintainer: colingw@gmail.com
+license: BSD3
+extra-source-files:
+- ChangeLog.md
+
+ghc-options:
+- -fwarn-unused-imports
+- -fwarn-unused-binds
+
+dependencies:
+- base >=4.9 && <4.10
+- aeson >=1.0 && <1.1
+- bytestring
+- servant >=0.9 && <0.10
+- servant-server >=0.9 && <0.10
+- sqlite-simple >=0.4 && <0.5
+- text
+- th-printf >=0.3 && <0.4
+
+library:
+  source-dirs: lib
+  dependencies:
+  - http-media >=0.6 && <0.7
+
+executables:
+  aafa-server:
+    main: Server.hs
+    ghc-options:
+    - -threaded
+    dependencies:
+    - server
+    - warp >=3.2 && <3.3
+    - unix
+
+tests:
+  server-test:
+    main: Test.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    dependencies:
+    - tasty >=0.11 && <0.12
+    - tasty-hunit >=0.9 && <0.10
+    - server
