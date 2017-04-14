@@ -22,16 +22,19 @@ import           System.Posix.Signals hiding (Handler)
 
 type API =
        "signin"   :> Get '[HTML] B.ByteString
-  :<|> "signin"   :> ReqBody '[JSON] Int    :> Post '[JSON] Int
+  :<|> "signin"   :> ReqBody '[JSON] Int         :> Post '[JSON] Int
   :<|> "register" :> Get '[HTML] B.ByteString
-  :<|> "register" :> ReqBody '[JSON] Person :> Post '[JSON] Person
-  :<|> "group"    :> ReqBody '[JSON] BlockSignin :> Post '[JSON] Text
+  :<|> "register" :> ReqBody '[JSON] Person      :> Post '[JSON] Person
+  :<|> "groups"   :> Get '[HTML] B.ByteString
+  :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] Text
 
 api :: Proxy API
 api = Proxy
 
 server :: Env -> Server API
-server env = file "signin.html" :<|> sign env :<|> file "register.html" :<|> reg env :<|> day2 env
+server env = file "signin.html" :<|> sign env
+  :<|> file "register.html" :<|> reg env
+  :<|> file "groups.html" :<|> day2 env
 
 app :: Env -> Application
 app = serve api . server
