@@ -8,7 +8,6 @@ import qualified Control.Exception as E
 import           Control.Monad.IO.Class
 import qualified Data.ByteString.Lazy as B
 import           Data.Proxy
-import           Data.Text (Text)
 import           Database.SQLite.Simple
 import qualified Network.Wai.Handler.Warp as W
 import           Servant.API
@@ -22,11 +21,12 @@ import           System.Posix.Signals hiding (Handler)
 
 type API =
        "signin"   :> Get '[HTML] B.ByteString
-  :<|> "signin"   :> ReqBody '[JSON] Int         :> Post '[JSON] Int
+  :<|> "signin"   :> ReqBody '[JSON] Int         :> Post '[JSON] ()
   :<|> "register" :> Get '[HTML] B.ByteString
-  :<|> "register" :> ReqBody '[JSON] Person      :> Post '[JSON] Person
+  :<|> "register" :> ReqBody '[JSON] Person      :> Post '[JSON] ()
   :<|> "groups"   :> Get '[HTML] B.ByteString
-  :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] Text
+  :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] ()
+  :<|> "ping"     :> Get '[PlainText] String
 
 api :: Proxy API
 api = Proxy
@@ -35,6 +35,7 @@ server :: Env -> Server API
 server env = file "signin.html" :<|> sign env
   :<|> file "register.html" :<|> reg env
   :<|> file "groups.html" :<|> day2 env
+  :<|> pure "pong"
 
 app :: Env -> Application
 app = serve api . server
@@ -43,14 +44,14 @@ app = serve api . server
 file :: FilePath -> Handler B.ByteString
 file = liftIO . B.readFile
 
-reg :: Env -> Person -> Handler Person
-reg env p = liftIO (register (conn env) p) >> pure p
+reg :: Env -> Person -> Handler ()
+reg env p = liftIO (register (conn env) p)
 
-sign :: Env -> Int -> Handler Int
-sign env uuid = liftIO (signin (conn env) uuid) >> pure uuid
+sign :: Env -> Int -> Handler ()
+sign env uuid = liftIO (signin (conn env) uuid)
 
-day2 :: Env -> BlockSignin -> Handler Text
-day2 env b = liftIO (blockSignin (conn env) b) >> pure "Success."
+day2 :: Env -> BlockSignin -> Handler ()
+day2 env b = liftIO (blockSignin (conn env) b)
 
 main :: IO ()
 main = do

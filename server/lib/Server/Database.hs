@@ -3,7 +3,7 @@
 
 module Server.Database where
 
-import Data.List (intersperse)
+import Data.List (intercalate)
 import Data.Maybe (listToMaybe)
 import Database.SQLite.Simple
 import Server.Types
@@ -36,7 +36,7 @@ person c uuid = listToMaybe <$> query c "SELECT * FROM people WHERE uuid = ?" (O
 
 -- | Register a new attendee.
 register :: Connection -> Person -> IO ()
-register c p = execute c q p
+register c = execute c q
   where q = Query [st|
 INSERT INTO people (
 uuid, first_name, last_name, city, company, blockA, blockB, blockC, third_day
@@ -54,4 +54,4 @@ blockSignin c (BlockSignin b t ps) = execute c (Query q) $ Only t
         b' A = "blockA"
         b' B = "blockB"
         b' C = "blockC"
-        ps' = concat . intersperse "," $ map show ps
+        ps' = intercalate "," $ map show ps

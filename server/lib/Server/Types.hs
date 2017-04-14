@@ -43,7 +43,7 @@ data Person = Person { uuid     :: Int
                      , blockA   :: Maybe Text
                      , blockB   :: Maybe Text
                      , blockC   :: Maybe Text
-                     , thirdDay :: Bool } deriving (Generic, ToJSON)
+                     , thirdDay :: Bool }
 
 instance FromJSON Person where
   parseJSON (Object v) = Person
