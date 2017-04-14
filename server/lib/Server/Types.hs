@@ -7,7 +7,8 @@ module Server.Types
     HTML
     -- * Database Types
   , Person(..)
---  , Registration
+  , Block(..)
+  , BlockSignin(..)
     -- * Runtime Environment
   , Env(..)
   ) where
@@ -22,7 +23,7 @@ import           Servant.API
 
 ---
 
-data Env = Env { conn :: Connection }
+newtype Env = Env { conn :: Connection }
 
 -- | The Content-Type @text/html@.
 data HTML
@@ -61,3 +62,9 @@ instance FromRow Person where
 
 instance ToRow Person where
   toRow (Person uu fn ln ci co ba bb bc td) = toRow (uu, fn, ln, ci, co, ba, bb, bc, td)
+
+data Block = A | B | C deriving (Generic, FromJSON)
+
+data BlockSignin = BlockSignin { block :: Block
+                               , topic :: Text
+                               , group :: [Int] } deriving (Generic, FromJSON)

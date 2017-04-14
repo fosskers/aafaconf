@@ -3,6 +3,7 @@
 
 module Server.Database where
 
+import Data.List (intersperse)
 import Data.Maybe (listToMaybe)
 import Database.SQLite.Simple
 import Server.Types
@@ -10,7 +11,7 @@ import Text.Printf.TH
 
 ---
 
--- | Create the database if necessary.
+-- | Create the database and initial tables if necessary.
 wake :: Connection -> IO ()
 wake c = execute_ c $ Query [st|
 CREATE TABLE IF NOT EXISTS people (
@@ -45,3 +46,12 @@ uuid, first_name, last_name, city, company, blockA, blockB, blockC, third_day
 -- the third day.
 signin :: Connection -> Int -> IO ()
 signin c uuid = execute c "UPDATE people SET third_day = 1 WHERE uuid = ?" $ Only uuid
+
+-- | Set a Block topic for a group of attendees.
+blockSignin :: Connection -> BlockSignin -> IO ()
+blockSignin c (BlockSignin b t ps) = execute c (Query q) $ Only t
+  where q = [st|UPDATE people SET %s = ? WHERE uuid IN (%s)|] (b' b :: String) ps'
+        b' A = "blockA"
+        b' B = "blockB"
+        b' C = "blockC"
+        ps' = concat . intersperse "," $ map show ps

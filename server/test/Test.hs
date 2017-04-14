@@ -22,6 +22,7 @@ suite c = testGroup "AAFA Server Tests"
   [ testGroup "Database Interaction"
     [ testCase "Registration" $ writeGuy c
     , testCase "Sign-in" $ signinGirl c
+    , testCase "Block Sign-in" $ day2Block c
     ]
   ]
 
@@ -30,6 +31,9 @@ guy = Person 12345 "Jack" "TheCat" "Vancouver" "Horizon" Nothing Nothing Nothing
 
 girl :: Person
 girl = Person 98765 "QTip" "TheCat" "Vancouver" "Horizon" Nothing Nothing Nothing False
+
+peeps :: BlockSignin
+peeps = BlockSignin A "Asskissing" [12345, 98765]
 
 writeGuy :: Connection -> Assertion
 writeGuy c = do
@@ -43,3 +47,9 @@ signinGirl c = do
   signin c 98765
   p <- person c 98765
   fmap thirdDay p @?= Just True
+
+day2Block :: Connection -> Assertion
+day2Block c = do
+  blockSignin c peeps
+  p <- person c 98765
+  fmap blockA p @?= Just (Just "Asskissing")
