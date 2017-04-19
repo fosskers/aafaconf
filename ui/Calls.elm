@@ -1,40 +1,44 @@
 module Calls exposing (..)
 
+import Array as A
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
+import Json.Encode as J
 
 ---
 
-type Event = Ping | Resp (Result Http.Error String)
+-- | A new registree.
+type alias Person = { uuid    : Int
+                    , fname   : String
+                    , lname   : String
+                    , city    : String
+                    , company : String }
 
-type alias State = { resp  : String }
+encodePerson : Person -> J.Value
+encodePerson p = J.object [ ("uuid", J.int p.uuid)
+                          , ("fname", J.string p.fname)
+                          , ("lname", J.string p.lname)
+                          , ("city", J.string p.city)
+                          , ("company", J.string p.company) ]
 
-main = Html.program { init = init
-                    , view = view
-                    , update = update
-                    , subscriptions = subscriptions
-                    }
+-- | A panel discussion time block.
+type Block = A | B | C
 
-init : (State, Cmd Event)
-init = (State "", Cmd.none)
+encodeBlock : Block -> J.Value
+encodeBlock b = J.string <| toString b
 
-update : Event -> State -> (State, Cmd Event)
-update event state =
-    case event of
-        Ping -> (state, Http.send Resp getFoo)
-        Resp (Err e) -> ({ state | resp = toString e}, Cmd.none)
-        Resp (Ok  s) -> ({ state | resp = s}, Cmd.none)
+-- | A group of attendees to sign in on the second day.
+type alias BlockSignin = { block : Block
+                         , topic : String
+                         , group : List Int }
 
-subscriptions : State -> Sub Event
-subscriptions _ = Sub.none
+encodeBSI : BlockSignin -> J.Value
+encodeBSI bsi = J.object [ ("block", encodeBlock bsi.block)
+                         , ("topic", J.string bsi.topic)
+                         , ("group", J.array <| A.fromList <| List.map J.int bsi.group)
+                         ]
 
-view : State -> Html Event
-view state = div []
-         [ button [ onClick Ping ] [ text "Click me"]
-         , div [] [text state.resp]
-         ]
-
-getFoo : Http.Request String
-getFoo = Http.getString "http://localhost:8081/ping"
+--getFoo : Http.Request String
+--getFoo = Http.getString "http://localhost:8081/ping"
