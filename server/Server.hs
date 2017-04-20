@@ -21,11 +21,12 @@ import           System.Posix.Signals hiding (Handler)
 
 type API =
        "signin"   :> Get '[HTML] B.ByteString
-  :<|> "signin"   :> ReqBody '[JSON] Int         :> Post '[JSON] ()
+  :<|> "signin"   :> ReqBody '[JSON] Int         :> Post '[JSON] String
   :<|> "register" :> Get '[HTML] B.ByteString
-  :<|> "register" :> ReqBody '[JSON] Person      :> Post '[JSON] ()
+  :<|> "register" :> ReqBody '[JSON] Person      :> Post '[JSON] String
   :<|> "groups"   :> Get '[HTML] B.ByteString
-  :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] ()
+  :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] String
+  :<|> "test"     :> Get '[HTML] B.ByteString
   :<|> "ping"     :> Get '[PlainText] String
 
 api :: Proxy API
@@ -35,6 +36,7 @@ server :: Env -> Server API
 server env = file "signin.html" :<|> sign env
   :<|> file "register.html" :<|> reg env
   :<|> file "groups.html" :<|> day2 env
+  :<|> file "tests.html"
   :<|> pure "pong"
 
 app :: Env -> Application
@@ -44,14 +46,14 @@ app = serve api . server
 file :: FilePath -> Handler B.ByteString
 file = liftIO . B.readFile
 
-reg :: Env -> Person -> Handler ()
-reg env p = liftIO (register (conn env) p)
+reg :: Env -> Person -> Handler String
+reg env p = liftIO (register (conn env) p) >> pure "Success"
 
-sign :: Env -> Int -> Handler ()
-sign env uuid = liftIO (signin (conn env) uuid)
+sign :: Env -> Int -> Handler String
+sign env uuid = liftIO (signin (conn env) uuid) >> pure "Success"
 
-day2 :: Env -> BlockSignin -> Handler ()
-day2 env b = liftIO (blockSignin (conn env) b)
+day2 :: Env -> BlockSignin -> Handler String
+day2 env b = liftIO (blockSignin (conn env) b) >> pure "Success"
 
 main :: IO ()
 main = do
