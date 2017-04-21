@@ -1,7 +1,7 @@
 module Calls exposing
     ( -- * Types
       Person
-    , Block
+    , Block(..)
     , BlockSignin
       -- * Json Encoding
     , encodePerson, encodeBlock, encodeBSI
