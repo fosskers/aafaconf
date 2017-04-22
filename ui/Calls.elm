@@ -8,7 +8,7 @@ module Calls exposing
       -- * Json Decoding
     , decodePerson
       -- * API Calls
-    , register, signin, groups
+    , register, signin, groups, peopleFromBlock
     )
 
 import Array as A
@@ -78,3 +78,6 @@ signin host uuid = Http.post (host ++ "/signin") (Http.jsonBody <| JE.int uuid) 
 
 groups : String -> BlockSignin -> Http.Request String
 groups host bsi = Http.post (host ++ "/groups") (Http.jsonBody <| encodeBSI bsi) <| JD.string
+
+peopleFromBlock : String -> Block -> Http.Request (List Person)
+peopleFromBlock host b = Http.get (host ++ "/groups/" ++ toString b) (JD.list decodePerson)

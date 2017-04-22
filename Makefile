@@ -7,7 +7,7 @@ build: elm
 start:
 	cd server/ && stack exec aafa-server
 
-zoom: clean elm start
+go: clean elm start
 
 clean:
 	rm -f server/aafa.db
