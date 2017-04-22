@@ -43,19 +43,7 @@ data Person = Person { uuid     :: Int
                      , blockA   :: Maybe Text
                      , blockB   :: Maybe Text
                      , blockC   :: Maybe Text
-                     , thirdDay :: Bool }
-
-instance FromJSON Person where
-  parseJSON (Object v) = Person
-    <$> v .:  "uuid"
-    <*> v .:  "fname"
-    <*> v .:  "lname"
-    <*> v .:  "city"
-    <*> v .:  "company"
-    <*> v .:? "blockA"
-    <*> v .:? "blockB"
-    <*> v .:? "blockC"
-    <*> v .:? "thirdDay" .!= False
+                     , thirdDay :: Bool } deriving (Generic, FromJSON)
 
 instance FromRow Person where
   fromRow = Person <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
