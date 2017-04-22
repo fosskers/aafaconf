@@ -20,18 +20,18 @@ init = ( State (Maybe.withDefault [] <| List.tail tests) []
 update : Event -> State -> (State, Cmd Event)
 update event state =
     case event of
-        Res l (Err e) -> ({state | results = Test l (Bad <| toString e) :: state.results
-                                 , tests = Maybe.withDefault [] <| List.tail state.tests
-                          }, Maybe.withDefault Cmd.none <| List.head state.tests)
-        Res l (Ok s)  -> ({state | results = Test l (assert s "Success") :: state.results
-                                 , tests = Maybe.withDefault [] <| List.tail state.tests
-                          }, Maybe.withDefault Cmd.none <| List.head state.tests)
-        Blk l (Err e) -> ({state | results = Test l (Bad <| toString e) :: state.results
-                                 , tests = Maybe.withDefault [] <| List.tail state.tests
-                          }, Maybe.withDefault Cmd.none <| List.head state.tests)
-        Blk l (Ok s)  -> ({state | results = Test l (assert (List.length s) 1) :: state.results
-                                 , tests = Maybe.withDefault [] <| List.tail state.tests
-                          }, Maybe.withDefault Cmd.none <| List.head state.tests)
+        Res l (Err e) -> (bad state l e , Maybe.withDefault Cmd.none <| List.head state.tests)
+        Res l (Ok s)  -> (good state l s "Success", Maybe.withDefault Cmd.none <| List.head state.tests)
+        Blk l (Err e) -> (bad state l e, Maybe.withDefault Cmd.none <| List.head state.tests)
+        Blk l (Ok s)  -> (good state l (List.length s) 1, Maybe.withDefault Cmd.none <| List.head state.tests)
+
+bad : State -> String -> H.Error -> State
+bad s l e = { s | results = Test l (Bad <| toString e) :: s.results
+            , tests = Maybe.withDefault [] <| List.tail s.tests }
+
+good : State -> String -> a -> a -> State
+good s l a b = { s | results = Test l (assert a b) :: s.results
+               , tests = Maybe.withDefault [] <| List.tail s.tests }
 
 view : State -> Html Event
 view state = div [] <| List.map (\t -> div [] [ rth t ]) state.results
