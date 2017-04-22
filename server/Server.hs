@@ -25,6 +25,7 @@ type API =
   :<|> "register" :> Get '[HTML] B.ByteString
   :<|> "register" :> ReqBody '[JSON] Person      :> Post '[JSON] String
   :<|> "groups"   :> Get '[HTML] B.ByteString
+  :<|> "groups"   :> Capture "block" Block       :> Get '[JSON] [Person]
   :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] String
   :<|> "test"     :> Get '[HTML] B.ByteString
   :<|> "ping"     :> Get '[PlainText] String
@@ -35,7 +36,7 @@ api = Proxy
 server :: Env -> Server API
 server env = file "signin.html" :<|> sign env
   :<|> file "register.html" :<|> reg env
-  :<|> file "groups.html" :<|> day2 env
+  :<|> file "groups.html" :<|> pbb env :<|> day2 env
   :<|> file "tests.html"
   :<|> pure "pong"
 
@@ -51,6 +52,9 @@ reg env p = liftIO (register (conn env) p) >> pure "Success"
 
 sign :: Env -> Int -> Handler String
 sign env uuid = liftIO (signin (conn env) uuid) >> pure "Success"
+
+pbb :: Env -> Block -> Handler [Person]
+pbb env b = liftIO $ peopleByBlock (conn env) b
 
 day2 :: Env -> BlockSignin -> Handler String
 day2 env b = liftIO (blockSignin (conn env) b) >> pure "Success"

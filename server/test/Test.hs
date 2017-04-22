@@ -50,6 +50,8 @@ signinGirl c = do
 
 day2Block :: Connection -> Assertion
 day2Block c = do
-  blockSignin c peeps
+  peeps <- peopleByBlock c A
+  length peeps @?= 2
+  blockSignin c . BlockSignin A "Asskissing" $ map uuid peeps
   p <- person c 98765
   fmap blockA p @?= Just (Just "Asskissing")

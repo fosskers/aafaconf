@@ -24,6 +24,7 @@ dependencies:
 library:
   source-dirs: lib
   dependencies:
+    - http-api-data >= 0.3 && < 0.4
     - http-media >=0.6 && <0.7
 
 executables:

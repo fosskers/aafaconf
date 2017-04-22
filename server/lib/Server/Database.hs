@@ -30,6 +30,11 @@ third_day BOOLEAN
 people :: Connection -> IO [Person]
 people c = query_ c "SELECT * FROM people;"
 
+-- | Any `Person` who hasn't yet been signed in for a particular `Block`.
+peopleByBlock :: Connection -> Block -> IO [Person]
+peopleByBlock c b = query_ c (Query q)
+  where q = [st|SELECT * FROM people WHERE %s IS NULL|] $ pretty b
+
 -- | Fetch one `Person`.
 person :: Connection -> Int -> IO (Maybe Person)
 person c uuid = listToMaybe <$> query c "SELECT * FROM people WHERE uuid = ?" (Only uuid)
@@ -50,8 +55,5 @@ signin c uuid = execute c "UPDATE people SET third_day = 1 WHERE uuid = ?" $ Onl
 -- | Set a Block topic for a group of attendees.
 blockSignin :: Connection -> BlockSignin -> IO ()
 blockSignin c (BlockSignin b t ps) = execute c (Query q) $ Only t
-  where q = [st|UPDATE people SET %s = ? WHERE uuid IN (%s)|] (b' b :: String) ps'
-        b' A = "blockA"
-        b' B = "blockB"
-        b' C = "blockC"
+  where q = [st|UPDATE people SET %s = ? WHERE uuid IN (%s)|] (pretty b) ps'
         ps' = intercalate "," $ map show ps
