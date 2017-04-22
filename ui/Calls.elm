@@ -5,33 +5,54 @@ module Calls exposing
     , BlockSignin
       -- * Json Encoding
     , encodePerson, encodeBlock, encodeBSI
+      -- * Json Decoding
+    , decodePerson
       -- * API Calls
     , register, signin, groups
     )
 
 import Array as A
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
 import Http
 import Json.Decode as JD
+import Json.Decode.Pipeline exposing (decode, required)
 import Json.Encode as JE
+import Maybe as M
 
 ---
 
 -- | A new registree.
-type alias Person = { uuid    : Int
-                    , fname   : String
-                    , lname   : String
-                    , city    : String
-                    , company : String }
+type alias Person = { uuid     : Int
+                    , fname    : String
+                    , lname    : String
+                    , city     : String
+                    , company  : String
+                    , blockA   : Maybe String
+                    , blockB   : Maybe String
+                    , blockC   : Maybe String
+                    , thirdDay : Bool }
 
 encodePerson : Person -> JE.Value
-encodePerson p = JE.object [ ("uuid",    JE.int p.uuid)
-                           , ("fname",   JE.string p.fname)
-                           , ("lname",   JE.string p.lname)
-                           , ("city",    JE.string p.city)
-                           , ("company", JE.string p.company) ]
+encodePerson p = JE.object [ ("uuid",     JE.int p.uuid)
+                           , ("fname",    JE.string p.fname)
+                           , ("lname",    JE.string p.lname)
+                           , ("city",     JE.string p.city)
+                           , ("company",  JE.string p.company)
+                           , ("blockA",   M.withDefault JE.null <| M.map JE.string p.blockA)
+                           , ("blockB",   M.withDefault JE.null <| M.map JE.string p.blockB)
+                           , ("blockC",   M.withDefault JE.null <| M.map JE.string p.blockC)
+                           , ("thirdDay", JE.bool p.thirdDay) ]
+
+decodePerson : JD.Decoder Person
+decodePerson = decode Person
+               |> required "uuid"     JD.int
+               |> required "fname"    JD.string
+               |> required "lname"    JD.string
+               |> required "city"     JD.string
+               |> required "company"  JD.string
+               |> required "blockA"   (JD.nullable JD.string)
+               |> required "blockB"   (JD.nullable JD.string)
+               |> required "blockC"   (JD.nullable JD.string)
+               |> required "thirdDay" JD.bool
 
 -- | A panel discussion time block.
 type Block = A | B | C

@@ -1,4 +1,4 @@
-module Test exposing (main)
+module Test exposing (..)
 
 import Calls exposing (..)
 import Html exposing (..)
@@ -66,4 +66,4 @@ host : String
 host = "http://localhost:8081"
 
 guy : Person
-guy = Person 987 "John" "Smith" "Yellowknife" "FooCorp"
+guy = Person 987 "John" "Smith" "Yellowknife" "FooCorp" Nothing Nothing Nothing False
