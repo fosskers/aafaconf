@@ -20,7 +20,7 @@ import Maybe as M
 
 ---
 
--- | A new registree.
+-- | A new registrant.
 type alias Person = { uuid     : Int
                     , fname    : String
                     , lname    : String
