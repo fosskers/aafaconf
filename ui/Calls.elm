@@ -79,5 +79,6 @@ signin host uuid = Http.post (host ++ "/signin") (Http.jsonBody <| JE.int uuid) 
 groups : String -> BlockSignin -> Http.Request String
 groups host bsi = Http.post (host ++ "/groups") (Http.jsonBody <| encodeBSI bsi) <| JD.string
 
+-- | Everyone who hasn't been assigned a group for the given Block.
 peopleFromBlock : String -> Block -> Http.Request (List Person)
 peopleFromBlock host b = Http.get (host ++ "/groups/" ++ toString b) (JD.list decodePerson)
