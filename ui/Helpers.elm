@@ -22,6 +22,6 @@ footerStyle =
 pageLayout : Html a -> Html a
 pageLayout a =
     L.website
-        [ div [ headerStyle ] [ img [ src "aafapic.png", style [ ( "padding-left", "5%" ) ] ] [] ] ]
+        [ div [ headerStyle ] [ img [ src "/assets/aafapic.png", style [ ( "padding-left", "5%" ) ] ] [] ] ]
         [ a ]
         [ div [ footerStyle ] [] ]
