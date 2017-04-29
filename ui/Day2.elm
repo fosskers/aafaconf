@@ -13,6 +13,7 @@ import Ui.Chooser as Ch
 import Ui.Container as C
 import Ui.Layout as L
 
+
 --
 
 
@@ -53,6 +54,7 @@ init =
                 |> Ch.placeholder "Begin typing last name..."
                 |> Ch.searchable True
                 |> Ch.closeOnSelect True
+                |> Ch.multiple True
     in
         ( State Nothing Nothing [] [] False chooser, Cmd.none )
 
@@ -94,17 +96,24 @@ update event state =
 
         Submit ->
             let
-                block = M.withDefault A state.blockClicked
-                topic = M.withDefault "Ass Kissing" state.topicClicked
-                group = state.chooser.selected
+                block =
+                    M.withDefault A state.blockClicked
+
+                topic =
+                    M.withDefault "Ass Kissing" state.topicClicked
+
+                group =
+                    state.chooser.selected
                         |> Set.map (\n -> Result.withDefault 0 <| String.toInt n)
                         |> Set.toList
-                blockSignin = BlockSignin block topic group
+
+                blockSignin =
+                    BlockSignin block topic group
             in
-                ( state, H.send Written <| groups "" blockSignin)
+                ( state, H.send Written <| groups "" blockSignin )
 
         Written (Err _) ->
-            ( state, Cmd.none)
+            ( state, Cmd.none )
 
         Written (Ok _) ->
             ( { state | isSuccessful = True }, Cmd.none )
@@ -142,49 +151,61 @@ view state =
 
 content : State -> Html Event
 content state =
-    case ( state.blockClicked, state.topicClicked ) of
-        ( Nothing, Nothing ) ->
-            C.rowCenter [ style [ ( "padding-top", "15%" ) ] ]
-                [ C.columnCenter []
-                    [ B.model "A 9AM - 10:15AM" "primary" "big" |> B.view (Block A)
-                    , B.model "B 10:30AM - 11:45AM" "primary" "big" |> B.view (Block B)
-                    , B.model "C 12PM - 1:15PM" "primary" "big" |> B.view (Block C)
-                    ]
-                ]
+    if state.isSuccessful then
+        h1 [] [ text "Success!" ]
+    else
+        case ( state.blockClicked, state.topicClicked ) of
+            ( Nothing, Nothing ) ->
+                blockPage
 
-        ( Nothing, Just topic ) ->
-            C.rowCenter [] [ text "Error", B.model "Back" "primary" "small" |> B.view Back ]
+            ( Nothing, Just _ ) ->
+                errorPage
 
-        ( Just cat, Nothing ) ->
-            C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
-                [ C.columnCenter []
-                    [ B.model "Tough Decisions" "primary" "big" |> B.view (Topic "Tough Decisions")
-                    , B.model "Retention & Culture" "primary" "big" |> B.view (Topic "Retention & Culture")
-                    , B.model "Business Development" "primary" "big" |> B.view (Topic "Business Development")
-                    , B.model "VMS" "primary" "big" |> B.view (Topic "VMS")
-                    , B.model "Systems" "primary" "big" |> B.view (Topic "Systems")
-                    , B.model "Structures for Growth" "primary" "big" |> B.view (Topic "Structures for Growth")
-                    , B.model "Back" "primary" "small" |> B.view Back
-                    ]
-                ]
+            ( Just _, Nothing ) ->
+                topicPage
 
-        ( Just cat, Just topic ) ->
-            C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
-                [ C.columnCenter []
-                [ h2 [] [text topic]
-                , text "Please select group members from the dropdown menu"
-                , Html.map Choosing <| Ch.view state.chooser
-                , B.model "Submit Group" "primary" "small" |> B.view Submit
-                ]
-                ]
+            ( Just _, Just topic ) ->
+                chooserPage state topic
 
 
-{- Nothing -> div [] [ button [onClick Pip] [text "Pip"]
-                     , button [onClick Jack] [text "Jack"]
-                     , button [onClick Qtip] [text "Qtip"]
-                     ]
-   Just cat -> div []
-               [ button [onClick Back] [text "Back"]
-               , text cat
-               ]
--}
+blockPage : Html Event
+blockPage =
+    C.rowCenter [ style [ ( "padding-top", "15%" ) ] ]
+        [ C.columnCenter []
+            [ B.model "A 9AM - 10:15AM" "primary" "big" |> B.view (Block A)
+            , B.model "B 10:30AM - 11:45AM" "primary" "big" |> B.view (Block B)
+            , B.model "C 12PM - 1:15PM" "primary" "big" |> B.view (Block C)
+            ]
+        ]
+
+
+errorPage : Html Event
+errorPage =
+    C.rowCenter [] [ text "Error", B.model "Back" "primary" "small" |> B.view Back ]
+
+
+topicPage : Html Event
+topicPage =
+    C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
+        [ C.columnCenter []
+            [ B.model "Tough Decisions" "primary" "big" |> B.view (Topic "Tough Decisions")
+            , B.model "Retention & Culture" "primary" "big" |> B.view (Topic "Retention & Culture")
+            , B.model "Business Development" "primary" "big" |> B.view (Topic "Business Development")
+            , B.model "VMS" "primary" "big" |> B.view (Topic "VMS")
+            , B.model "Systems" "primary" "big" |> B.view (Topic "Systems")
+            , B.model "Structures for Growth" "primary" "big" |> B.view (Topic "Structures for Growth")
+            , B.model "Back" "primary" "small" |> B.view Back
+            ]
+        ]
+
+
+chooserPage : State -> String -> Html Event
+chooserPage state topic =
+    C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
+        [ C.columnCenter []
+            [ h2 [] [ text topic ]
+            , text "Please select group members from the dropdown menu"
+            , Html.map Choosing <| Ch.view state.chooser
+            , B.model "Submit Group" "primary" "small" |> B.view Submit
+            ]
+        ]
