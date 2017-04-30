@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds, TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Main (main) where
 
 import           Control.Concurrent
 import qualified Control.Exception as E
@@ -23,12 +23,13 @@ import           System.Posix.Signals hiding (Handler)
 type API =
        "signin"   :> Get '[HTML] B.ByteString
   :<|> "signin"   :> ReqBody '[JSON] Int         :> Post '[JSON] String
+  :<|> "everyone" :> Get '[JSON] [Person]
   :<|> "register" :> Get '[HTML] B.ByteString
   :<|> "register" :> ReqBody '[JSON] Person      :> Post '[JSON] String
   :<|> "groups"   :> Get '[HTML] B.ByteString
   :<|> "groups"   :> Capture "block" Block       :> Get '[JSON] [Person]
   :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] String
-  :<|> "test"     :> Get '[HTML] B.ByteString
+--  :<|> "test"     :> Get '[HTML] B.ByteString
   :<|> "ping"     :> Get '[PlainText] String
   :<|> "assets"   :> Raw
 
@@ -36,10 +37,10 @@ api :: Proxy API
 api = Proxy
 
 server :: Env -> Server API
-server env = file "signin.html" :<|> sign env
+server env = file "signin.html" :<|> sign env :<|> day3 env
   :<|> file "assets/register.html" :<|> reg env
   :<|> file "assets/groups.html" :<|> pbb env :<|> day2 env
-  :<|> file "tests.html"
+--  :<|> file "tests.html"
   :<|> pure "pong"
   :<|> serveDirectory "assets"
 
@@ -61,6 +62,9 @@ pbb env b = liftIO $ peopleByBlock (conn env) b
 
 day2 :: Env -> BlockSignin -> Handler String
 day2 env b = liftIO (blockSignin (conn env) b) >> pure "Success"
+
+day3 :: Env -> Handler [Person]
+day3 env = liftIO . day3People $ conn env
 
 main :: IO ()
 main = do

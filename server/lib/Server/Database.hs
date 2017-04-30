@@ -35,6 +35,10 @@ peopleByBlock :: Connection -> Block -> IO [Person]
 peopleByBlock c b = query_ c (Query q)
   where q = [st|SELECT * FROM people WHERE %s IS NULL|] $ pretty b
 
+-- | Any `Person` who hasn't yet been signed in for the third day.
+day3People :: Connection -> IO [Person]
+day3People c = query_ c "SELECT * from people WHERE third_day = 0"
+
 -- | Fetch one `Person`.
 person :: Connection -> Int -> IO (Maybe Person)
 person c uuid = listToMaybe <$> query c "SELECT * FROM people WHERE uuid = ?" (Only uuid)
