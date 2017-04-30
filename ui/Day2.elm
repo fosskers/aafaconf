@@ -180,7 +180,7 @@ view state =
 content : State -> Html Event
 content state =
     if state.isSuccessful then
-        h1 [] [ text "Success!" ]
+        centered [ h1 [] [ text "Success! Enjoy your session." ] ]
     else
         case ( state.blockClicked, state.topicClicked ) of
             ( Nothing, Nothing ) ->
