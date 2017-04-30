@@ -214,7 +214,6 @@ errorPage =
 
 
 
--- TODO: Add chosen block.
 topicPage : State -> Block -> Html Event
 topicPage state block =
     C.rowCenter [ style [ ( "padding-top", "5%" ) ] ]
