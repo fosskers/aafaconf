@@ -12,6 +12,7 @@ import           Database.SQLite.Simple
 import qualified Network.Wai.Handler.Warp as W
 import           Servant.API
 import           Servant.Server
+import           Servant.Utils.StaticFiles
 import           Server.Database
 import           Server.Types
 import           System.Exit
@@ -29,16 +30,18 @@ type API =
   :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] String
   :<|> "test"     :> Get '[HTML] B.ByteString
   :<|> "ping"     :> Get '[PlainText] String
+  :<|> "assets"   :> Raw
 
 api :: Proxy API
 api = Proxy
 
 server :: Env -> Server API
 server env = file "signin.html" :<|> sign env
-  :<|> file "register.html" :<|> reg env
-  :<|> file "groups.html" :<|> pbb env :<|> day2 env
+  :<|> file "assets/register.html" :<|> reg env
+  :<|> file "assets/groups.html" :<|> pbb env :<|> day2 env
   :<|> file "tests.html"
   :<|> pure "pong"
+  :<|> serveDirectory "assets"
 
 app :: Env -> Application
 app = serve api . server
