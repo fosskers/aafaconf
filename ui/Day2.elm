@@ -12,6 +12,7 @@ import Ui.Button as B
 import Ui.Chooser as Ch
 import Ui.Container as C
 import Ui.Layout as L
+import Ui.NotificationCenter as N
 
 
 --
@@ -23,6 +24,7 @@ type Event
     | Rtn (Result H.Error (List Person))
     | Choosing Ch.Msg
     | Written (Result H.Error String)
+    | Notify N.Msg
     | Submit
     | Back
 
@@ -34,6 +36,7 @@ type alias State =
     , currentSelected : List Person
     , isSuccessful : Bool
     , chooser : Ch.Model
+    , notify : N.Model Event
     }
 
 
@@ -55,8 +58,11 @@ init =
                 |> Ch.searchable True
                 |> Ch.closeOnSelect True
                 |> Ch.multiple True
+
+        notify =
+            N.init () |> N.timeout 5000 |> N.duration 500
     in
-        ( State Nothing Nothing [] [] False chooser, Cmd.none )
+        ( State Nothing Nothing [] [] False chooser notify, Cmd.none )
 
 
 update : Event -> State -> ( State, Cmd Event )
@@ -71,7 +77,11 @@ update event state =
             ( { state | topicClicked = Just name }, Cmd.none )
 
         Rtn (Err _) ->
-            ( state, Cmd.none )
+            let
+                ( notify, cmd ) =
+                    N.notify (text "Something went wrong! Try refreshing the page.") state.notify
+            in
+                ( { state | notify = notify }, Cmd.map Notify cmd )
 
         Rtn (Ok ppl) ->
             let
@@ -95,28 +105,46 @@ update event state =
                 )
 
         Submit ->
-            let
-                block =
-                    M.withDefault A state.blockClicked
+            if Set.isEmpty state.chooser.selected then
+                let
+                    ( notify, cmd ) =
+                        N.notify (text "Please select the attendees before you Submit.") state.notify
+                in
+                    ( { state | notify = notify }, Cmd.map Notify cmd )
+            else
+                let
+                    block =
+                        M.withDefault A state.blockClicked
 
-                topic =
-                    M.withDefault "Ass Kissing" state.topicClicked
+                    topic =
+                        M.withDefault "Ass Kissing" state.topicClicked
 
-                group =
-                    state.chooser.selected
-                        |> Set.map (\n -> Result.withDefault 0 <| String.toInt n)
-                        |> Set.toList
+                    group =
+                        state.chooser.selected
+                            |> Set.map (\n -> Result.withDefault 0 <| String.toInt n)
+                            |> Set.toList
 
-                blockSignin =
-                    BlockSignin block topic group
-            in
-                ( state, H.send Written <| groups "" blockSignin )
+                    blockSignin =
+                        BlockSignin block topic group
+                in
+                    ( state, H.send Written <| groups "" blockSignin )
 
         Written (Err _) ->
-            ( state, Cmd.none )
+            let
+                ( notify, cmd ) =
+                    N.notify (text "Group sign-in failed! Please try again.") state.notify
+            in
+                ( { state | notify = notify }, Cmd.map Notify cmd )
 
         Written (Ok _) ->
             ( { state | isSuccessful = True }, Cmd.none )
+
+        Notify msg ->
+            let
+                ( notify, cmd ) =
+                    N.update msg state.notify
+            in
+                ( { state | notify = notify }, Cmd.map Notify cmd )
 
         Back ->
             init
@@ -156,25 +184,26 @@ content state =
     else
         case ( state.blockClicked, state.topicClicked ) of
             ( Nothing, Nothing ) ->
-                blockPage
+                blockPage state
 
             ( Nothing, Just _ ) ->
                 errorPage
 
             ( Just _, Nothing ) ->
-                topicPage
+                topicPage state
 
             ( Just _, Just topic ) ->
                 chooserPage state topic
 
 
-blockPage : Html Event
-blockPage =
+blockPage : State -> Html Event
+blockPage state =
     C.rowCenter [ style [ ( "padding-top", "15%" ) ] ]
         [ C.columnCenter []
             [ B.model "A 9AM - 10:15AM" "primary" "big" |> B.view (Block A)
             , B.model "B 10:30AM - 11:45AM" "primary" "big" |> B.view (Block B)
             , B.model "C 12PM - 1:15PM" "primary" "big" |> B.view (Block C)
+            , N.view Notify state.notify
             ]
         ]
 
@@ -184,8 +213,8 @@ errorPage =
     C.rowCenter [] [ text "Error", B.model "Back" "primary" "small" |> B.view Back ]
 
 
-topicPage : Html Event
-topicPage =
+topicPage : State -> Html Event
+topicPage state =
     C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
         [ C.columnCenter []
             [ B.model "Tough Decisions" "primary" "big" |> B.view (Topic "Tough Decisions")
@@ -195,6 +224,7 @@ topicPage =
             , B.model "Systems" "primary" "big" |> B.view (Topic "Systems")
             , B.model "Structures for Growth" "primary" "big" |> B.view (Topic "Structures for Growth")
             , B.model "Back" "primary" "small" |> B.view Back
+            , N.view Notify state.notify
             ]
         ]
 
@@ -207,5 +237,6 @@ chooserPage state topic =
             , text "Please select group members from the dropdown menu"
             , Html.map Choosing <| Ch.view state.chooser
             , B.model "Submit Group" "primary" "small" |> B.view Submit
+            , N.view Notify state.notify
             ]
         ]
