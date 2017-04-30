@@ -152,7 +152,7 @@ update event state =
 
 toItem : Person -> Ch.Item
 toItem p =
-    { label = p.lname ++ "," ++ p.fname
+    { label = p.fname ++ " " ++ p.lname
     , value = toString p.uuid
     , id = toString p.uuid
     }
@@ -189,8 +189,8 @@ content state =
             ( Nothing, Just _ ) ->
                 errorPage
 
-            ( Just _, Nothing ) ->
-                topicPage state
+            ( Just block, Nothing ) ->
+                topicPage state block
 
             ( Just _, Just topic ) ->
                 chooserPage state topic
@@ -213,17 +213,21 @@ errorPage =
     C.rowCenter [] [ text "Error", B.model "Back" "primary" "small" |> B.view Back ]
 
 
-topicPage : State -> Html Event
-topicPage state =
-    C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
+
+-- TODO: Add chosen block.
+topicPage : State -> Block -> Html Event
+topicPage state block =
+    C.rowCenter [ style [ ( "padding-top", "5%" ) ] ]
         [ C.columnCenter []
-            [ B.model "Tough Decisions" "primary" "big" |> B.view (Topic "Tough Decisions")
+            [ h1 [] [ text <| "Block " ++ toString block ]
+            , h3 [] [ i [] [ text "Choose your session topic." ] ]
+            , B.model "Tough Decisions" "primary" "big" |> B.view (Topic "Tough Decisions")
             , B.model "Retention & Culture" "primary" "big" |> B.view (Topic "Retention & Culture")
             , B.model "Business Development" "primary" "big" |> B.view (Topic "Business Development")
             , B.model "VMS" "primary" "big" |> B.view (Topic "VMS")
             , B.model "Systems" "primary" "big" |> B.view (Topic "Systems")
             , B.model "Structures for Growth" "primary" "big" |> B.view (Topic "Structures for Growth")
-            , B.model "Back" "primary" "small" |> B.view Back
+--            , B.model "Back" "primary" "small" |> B.view Back
             , N.view Notify state.notify
             ]
         ]
@@ -234,9 +238,9 @@ chooserPage state topic =
     C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
         [ C.columnCenter []
             [ h2 [] [ text topic ]
-            , text "Please select group members from the dropdown menu"
+            , i [] [ text "Please select group members from the dropdown menu." ]
             , Html.map Choosing <| Ch.view state.chooser
-            , B.model "Submit Group" "primary" "small" |> B.view Submit
+            , B.model "Submit Group" "primary" "medium" |> B.view Submit
             , N.view Notify state.notify
             ]
         ]
