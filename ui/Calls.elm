@@ -8,7 +8,7 @@ module Calls exposing
       -- * Json Decoding
     , decodePerson
       -- * API Calls
-    , register, signin, groups, peopleFromBlock
+    , register, signin, groups, peopleFromBlock, day3People
     )
 
 import Array as A
