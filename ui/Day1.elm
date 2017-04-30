@@ -9,6 +9,7 @@ import Http as H
 import Random as R
 import Ui.Button as B
 import Ui.Container as C
+import Ui.NotificationCenter as N
 
 
 ---
@@ -22,6 +23,7 @@ type Event
     | RmId Int
     | Registered (Result H.Error String)
     | Submit
+    | Notif N.Msg
 
 
 type alias State =
@@ -30,6 +32,7 @@ type alias State =
     , city : String
     , company : String
     , isSuccessful : Bool
+    , notif : N.Model Event
     }
 
 
@@ -44,7 +47,11 @@ main =
 
 init : ( State, Cmd Event )
 init =
-    ( State "" "" "" "" False, Cmd.none )
+    let
+        notif =
+            N.init () |> N.timeout 5000 |> N.duration 500
+    in
+        ( State "" "" "" "" False notif, Cmd.none )
 
 
 update : Event -> State -> ( State, Cmd Event )
@@ -71,7 +78,11 @@ update event state =
                     List.all (\s -> String.isEmpty s |> not) fields
             in
                 if not valid then
-                    ( state, Cmd.none )
+                    let
+                        ( notif, cmd ) =
+                            N.notify (text "Please fill out all the fields.") state.notif
+                    in
+                        ( { state | notif = notif }, Cmd.map Notif cmd )
                 else
                     ( state, R.generate RmId (R.int 0 999999999) )
 
@@ -83,10 +94,21 @@ update event state =
                 ( state, H.send Registered <| register "" person )
 
         Registered (Err _) ->
-            ( state, Cmd.none )
+            let
+                ( notif, cmd ) =
+                    N.notify (text "Hmm, something went wrong! Please try again.") state.notif
+            in
+                ( { state | notif = notif }, Cmd.map Notif cmd )
 
         Registered (Ok _) ->
             ( { state | isSuccessful = True }, Cmd.none )
+
+        Notif msg ->
+            let
+                ( notif, cmd ) =
+                    N.update msg state.notif
+            in
+                ( { state | notif = notif }, Cmd.map Notif cmd )
 
 
 view : State -> Html Event
@@ -107,4 +129,5 @@ formLayout state =
             , div [] [ input [ placeholder "City", onInput City, maxlength 50 ] [] ]
             , div [] [ input [ placeholder "Company", onInput Company, maxlength 50 ] [] ]
             , B.model "Submit" "primary" "medium" |> B.view Submit
+            , N.view Notif state.notif
             ]
