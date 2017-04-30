@@ -1,5 +1,7 @@
 elm:
-	cd ui/ && elm-make Test.elm --output tests.html && mv tests.html ../server/
+	cd ui/  && elm-make Day1.elm --output register.html \
+		&& elm-make Day2.elm --output groups.html \
+		&& mv *.html ../assets/
 
 build: elm
 	cd server/ && stack build
