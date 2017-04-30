@@ -1,14 +1,14 @@
 module Day1 exposing (..)
 
+import Calls exposing (..)
+import Helpers exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Helpers exposing (..)
+import Http as H
+import Random as R
 import Ui.Button as B
 import Ui.Container as C
-import Random as R
-import Http as H
-import Calls exposing (..)
 
 
 ---
@@ -38,17 +38,13 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = subscriptions
+        , subscriptions = \_ -> Sub.none
         }
 
 
 init : ( State, Cmd Event )
 init =
     ( State "" "" "" "" False, Cmd.none )
-
-
-
--- Need to add max string length to inputs!
 
 
 update : Event -> State -> ( State, Cmd Event )
@@ -93,11 +89,6 @@ update event state =
             ( { state | isSuccessful = True }, Cmd.none )
 
 
-subscriptions : State -> Sub Event
-subscriptions _ =
-    Sub.none
-
-
 view : State -> Html Event
 view state =
     pageLayout <| formLayout state
@@ -106,19 +97,14 @@ view state =
 formLayout : State -> Html Event
 formLayout state =
     if state.isSuccessful then
-        C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
-            [ C.columnCenter []
-                [ h1 [] [ text <| "Thanks for registering, " ++ state.firstName ++ "!" ] ]
-            ]
+        centered [ h1 [] [ text <| "Thanks for registering, " ++ state.firstName ++ "!" ] ]
     else
-        C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
-            [ C.columnCenter []
-                [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ]
-                , h5 [] [ text "Please register below." ]
-                , div [] [ input [ placeholder "First Name", onInput Fname, maxlength 50 ] [] ]
-                , div [] [ input [ placeholder "Last Name", onInput Lname, maxlength 50 ] [] ]
-                , div [] [ input [ placeholder "City", onInput City, maxlength 50 ] [] ]
-                , div [] [ input [ placeholder "Company", onInput Company, maxlength 50 ] [] ]
-                , B.model "Submit" "primary" "medium" |> B.view Submit
-                ]
+        centered
+            [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ]
+            , h5 [] [ text "Please register below." ]
+            , div [] [ input [ placeholder "First Name", onInput Fname, maxlength 50 ] [] ]
+            , div [] [ input [ placeholder "Last Name", onInput Lname, maxlength 50 ] [] ]
+            , div [] [ input [ placeholder "City", onInput City, maxlength 50 ] [] ]
+            , div [] [ input [ placeholder "Company", onInput Company, maxlength 50 ] [] ]
+            , B.model "Submit" "primary" "medium" |> B.view Submit
             ]
