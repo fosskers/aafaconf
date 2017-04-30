@@ -79,16 +79,20 @@ update event state =
                     ( state, Cmd.none )
                 else
                     ( state, R.generate RmId (R.int 0 999999999) )
+
         RmId num ->
             let
-                person = Person num state.firstName state.lastName state.city state.company Nothing Nothing Nothing False
+                person =
+                    Person num state.firstName state.lastName state.city state.company Nothing Nothing Nothing False
             in
-                (state, H.send Registered <| register "" person)
+                ( state, H.send Registered <| register "" person )
 
         Registered (Err _) ->
-            ( state, Cmd.none)
+            ( state, Cmd.none )
+
         Registered (Ok _) ->
-            ( {state | isSuccessful = True }, Cmd.none)
+            ( { state | isSuccessful = True }, Cmd.none )
+
 
 subscriptions : State -> Sub Event
 subscriptions _ =
@@ -96,20 +100,26 @@ subscriptions _ =
 
 
 view : State -> Html Event
-view _ =
-    pageLayout formLayout
+view state =
+    pageLayout <| formLayout state
 
 
-formLayout : Html Event
-formLayout =
-    C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
-        [ C.columnCenter []
-            [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ]
-            , h5 [] [ text "Please register below." ]
-            , div [] [ input [ placeholder "First Name" ] [] ]
-            , div [] [ input [ placeholder "Last Name" ] [] ]
-            , div [] [ input [ placeholder "City" ] [] ]
-            , div [] [ input [ placeholder "Company" ] [] ]
-            , B.model "Submit" "primary" "medium" |> B.view Submit
+formLayout : State -> Html Event
+formLayout state =
+    if state.isSuccessful then
+        C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
+            [ C.columnCenter []
+                [ h1 [] [ text <| "Thanks for registering " ++ state.firstName ++ "!" ] ]
             ]
-        ]
+    else
+        C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
+            [ C.columnCenter []
+                [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ]
+                , h5 [] [ text "Please register below." ]
+                , div [ onInput Fname ] [ input [ placeholder "First Name" ] [] ]
+                , div [ onInput Lname ] [ input [ placeholder "Last Name" ] [] ]
+                , div [ onInput City ] [ input [ placeholder "City" ] [] ]
+                , div [ onInput Company ] [ input [ placeholder "Company" ] [] ]
+                , B.model "Submit" "primary" "medium" |> B.view Submit
+                ]
+            ]
