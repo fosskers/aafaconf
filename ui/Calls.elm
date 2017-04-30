@@ -81,4 +81,8 @@ groups host bsi = Http.post (host ++ "/groups") (Http.jsonBody <| encodeBSI bsi)
 
 -- | Everyone who hasn't been assigned a group for the given Block.
 peopleFromBlock : String -> Block -> Http.Request (List Person)
-peopleFromBlock host b = Http.get (host ++ "/groups/" ++ toString b) (JD.list decodePerson)
+peopleFromBlock host b = Http.get (host ++ "/groups/" ++ toString b) <| JD.list decodePerson
+
+-- | Everyone who hasn't signed in on the third day.
+day3People : String -> Http.Request (List Person)
+day3People host = Http.get (host ++ "/everyone/") <| JD.list decodePerson
