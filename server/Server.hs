@@ -37,7 +37,7 @@ api :: Proxy API
 api = Proxy
 
 server :: Env -> Server API
-server env = file "signin.html" :<|> sign env :<|> day3 env
+server env = file "assets/signin.html" :<|> sign env :<|> day3 env
   :<|> file "assets/register.html" :<|> reg env
   :<|> file "assets/groups.html" :<|> pbb env :<|> day2 env
 --  :<|> file "tests.html"
