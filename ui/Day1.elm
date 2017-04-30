@@ -109,7 +109,7 @@ formLayout state =
     if state.isSuccessful then
         C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
             [ C.columnCenter []
-                [ h1 [] [ text <| "Thanks for registering " ++ state.firstName ++ "!" ] ]
+                [ h1 [] [ text <| "Thanks for registering, " ++ state.firstName ++ "!" ] ]
             ]
     else
         C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
