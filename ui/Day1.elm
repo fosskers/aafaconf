@@ -48,7 +48,6 @@ init =
 
 
 
--- Need to account for empty fields being submitted
 -- Need to add max string length to inputs!
 
 
@@ -116,10 +115,10 @@ formLayout state =
             [ C.columnCenter []
                 [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ]
                 , h5 [] [ text "Please register below." ]
-                , div [ onInput Fname ] [ input [ placeholder "First Name" ] [] ]
-                , div [ onInput Lname ] [ input [ placeholder "Last Name" ] [] ]
-                , div [ onInput City ] [ input [ placeholder "City" ] [] ]
-                , div [ onInput Company ] [ input [ placeholder "Company" ] [] ]
+                , div [] [ input [ placeholder "First Name", onInput Fname, maxlength 50 ] [] ]
+                , div [] [ input [ placeholder "Last Name", onInput Lname, maxlength 50 ] [] ]
+                , div [] [ input [ placeholder "City", onInput City, maxlength 50 ] [] ]
+                , div [] [ input [ placeholder "Company", onInput Company, maxlength 50 ] [] ]
                 , B.model "Submit" "primary" "medium" |> B.view Submit
                 ]
             ]
