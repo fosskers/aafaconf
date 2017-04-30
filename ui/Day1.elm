@@ -1,14 +1,15 @@
 module Day1 exposing (..)
 
+import Calls exposing (..)
+import Helpers exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Helpers exposing (..)
+import Http as H
+import Random as R
 import Ui.Button as B
 import Ui.Container as C
-import Random as R
-import Http as H
-import Calls exposing (..)
+import Ui.NotificationCenter as N
 
 
 ---
@@ -22,6 +23,7 @@ type Event
     | RmId Int
     | Registered (Result H.Error String)
     | Submit
+    | Notif N.Msg
 
 
 type alias State =
@@ -30,6 +32,7 @@ type alias State =
     , city : String
     , company : String
     , isSuccessful : Bool
+    , notif : N.Model Event
     }
 
 
@@ -38,17 +41,17 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = subscriptions
+        , subscriptions = \_ -> Sub.none
         }
 
 
 init : ( State, Cmd Event )
 init =
-    ( State "" "" "" "" False, Cmd.none )
-
-
-
--- Need to add max string length to inputs!
+    let
+        notif =
+            N.init () |> N.timeout 5000 |> N.duration 500
+    in
+        ( State "" "" "" "" False notif, Cmd.none )
 
 
 update : Event -> State -> ( State, Cmd Event )
@@ -75,7 +78,11 @@ update event state =
                     List.all (\s -> String.isEmpty s |> not) fields
             in
                 if not valid then
-                    ( state, Cmd.none )
+                    let
+                        ( notif, cmd ) =
+                            N.notify (text "Please fill out all the fields.") state.notif
+                    in
+                        ( { state | notif = notif }, Cmd.map Notif cmd )
                 else
                     ( state, R.generate RmId (R.int 0 999999999) )
 
@@ -87,15 +94,21 @@ update event state =
                 ( state, H.send Registered <| register "" person )
 
         Registered (Err _) ->
-            ( state, Cmd.none )
+            let
+                ( notif, cmd ) =
+                    N.notify (text "Hmm, something went wrong! Please try again.") state.notif
+            in
+                ( { state | notif = notif }, Cmd.map Notif cmd )
 
         Registered (Ok _) ->
             ( { state | isSuccessful = True }, Cmd.none )
 
-
-subscriptions : State -> Sub Event
-subscriptions _ =
-    Sub.none
+        Notif msg ->
+            let
+                ( notif, cmd ) =
+                    N.update msg state.notif
+            in
+                ( { state | notif = notif }, Cmd.map Notif cmd )
 
 
 view : State -> Html Event
@@ -106,19 +119,15 @@ view state =
 formLayout : State -> Html Event
 formLayout state =
     if state.isSuccessful then
-        C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
-            [ C.columnCenter []
-                [ h1 [] [ text <| "Thanks for registering, " ++ state.firstName ++ "!" ] ]
-            ]
+        centered [ h1 [] [ text <| "Thanks for registering, " ++ state.firstName ++ "!" ] ]
     else
-        C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
-            [ C.columnCenter []
-                [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ]
-                , h5 [] [ text "Please register below." ]
-                , div [] [ input [ placeholder "First Name", onInput Fname, maxlength 50 ] [] ]
-                , div [] [ input [ placeholder "Last Name", onInput Lname, maxlength 50 ] [] ]
-                , div [] [ input [ placeholder "City", onInput City, maxlength 50 ] [] ]
-                , div [] [ input [ placeholder "Company", onInput Company, maxlength 50 ] [] ]
-                , B.model "Submit" "primary" "medium" |> B.view Submit
-                ]
+        centered
+            [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ]
+            , h5 [] [ text "Please register below." ]
+            , div [] [ input [ placeholder "First Name", onInput Fname, maxlength 50 ] [] ]
+            , div [] [ input [ placeholder "Last Name", onInput Lname, maxlength 50 ] [] ]
+            , div [] [ input [ placeholder "City", onInput City, maxlength 50 ] [] ]
+            , div [] [ input [ placeholder "Company", onInput Company, maxlength 50 ] [] ]
+            , B.model "Submit" "primary" "medium" |> B.view Submit
+            , N.view Notif state.notif
             ]
