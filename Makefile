@@ -8,7 +8,7 @@ build: elm
 	cd server/ && stack build
 
 start:
-	cd server/ && stack exec aafa-server
+	cd server/ && stack exec -- aafa-server --port 8081
 
 go: build start
 

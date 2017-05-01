@@ -10,6 +10,7 @@ import qualified Data.ByteString.Lazy as B
 import           Data.Proxy
 import           Database.SQLite.Simple
 import qualified Network.Wai.Handler.Warp as W
+import           Options.Generic
 import           Servant.API
 import           Servant.Server
 import           Servant.Utils.StaticFiles
@@ -62,6 +63,7 @@ day3H env = liftIO . day3People $ conn env
 
 main :: IO ()
 main = do
+  Args p <- getRecord "AAFA Conf Backend"
   putStrLn "Connecting to DB..."
   conn <- open "aafa.db"
   wake conn
@@ -73,4 +75,4 @@ main = do
   tid <- myThreadId
   let h = close conn >> putStrLn "Shutting down." >> E.throwTo tid ExitSuccess
   installHandler keyboardSignal (Catch h) Nothing
-  W.run 8081 (app $ Env conn d1 d2 d3)
+  W.run p (app $ Env conn d1 d2 d3)

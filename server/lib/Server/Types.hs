@@ -11,6 +11,7 @@ module Server.Types
   , pretty
   , BlockSignin(..)
     -- * Runtime Environment
+  , Args(..)
   , Env(..)
   ) where
 
@@ -20,11 +21,16 @@ import           Data.Text (Text)
 import           Database.SQLite.Simple
 import           GHC.Generics
 import qualified Network.HTTP.Media as M
+import           Options.Generic
 import           Servant.API
 import           Web.HttpApiData (FromHttpApiData)
 
 ---
 
+-- | Commandline arguments.
+newtype Args = Args { port :: Int } deriving (Generic, ParseRecord)
+
+-- | Runtime environment.
 data Env = Env { conn :: Connection
                , day1 :: B.ByteString
                , day2 :: B.ByteString
