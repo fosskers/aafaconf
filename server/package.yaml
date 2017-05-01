@@ -4,9 +4,6 @@ author: Colin Woodbury
 maintainer: colingw@gmail.com
 license: BSD3
 
-extra-source-files:
-  - ChangeLog.md
-
 ghc-options:
   - -fwarn-unused-imports
   - -fwarn-unused-binds
