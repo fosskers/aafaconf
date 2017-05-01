@@ -1,3 +1,6 @@
+STACK ?= /bin/stack
+PORT ?= 8081
+
 elm:
 	cd ui/  && elm-make Day1.elm --output register.html \
 		&& elm-make Day2.elm --output groups.html \
@@ -5,10 +8,10 @@ elm:
 		&& mv *.html ../assets/
 
 build: elm
-	cd server/ && stack build
+	cd server/ && $(STACK) build
 
 start:
-	cd server/ && stack exec -- aafa-server --port 8081
+	cd server/ && $(STACK) exec -- aafa-server --port $(PORT)
 
 go: build start
 
