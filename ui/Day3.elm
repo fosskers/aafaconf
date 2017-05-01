@@ -6,6 +6,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http as H
+import Navigation as Nav
 import Set
 import Ui.Button as B
 import Ui.Chooser as Ch
@@ -22,17 +23,19 @@ type Event
     | Written (Result H.Error String)
     | FirstList (Result H.Error (List Person))
     | Notify N.Msg
+    | Location Nav.Location
 
 
 type alias State =
     { chooser : Ch.Model
     , isSuccessful : Bool
     , notify : N.Model Event
+    , loc : Nav.Location
     }
 
 
 main =
-    Html.program
+    Nav.program Location
         { init = init
         , view = view
         , update = update
@@ -40,8 +43,8 @@ main =
         }
 
 
-init : ( State, Cmd Event )
-init =
+init : Nav.Location -> ( State, Cmd Event )
+init loc =
     let
         chooser =
             Ch.init ()
@@ -52,8 +55,8 @@ init =
         notify =
             N.init () |> N.timeout 5000 |> N.duration 500
     in
-        ( State chooser False notify
-        , H.send FirstList <| day3People ""
+        ( State chooser False notify loc
+        , H.send FirstList <| day3People loc.origin
         )
 
 
@@ -100,12 +103,16 @@ update event state =
                     |> Maybe.withDefault "0"
                     |> String.toInt
                     |> Result.withDefault 0
-                    |> signin ""
+                    |> signin state.loc.origin
                     |> H.send Written
                 )
 
         Written (Err _) ->
-            ( state, Cmd.none )
+            let
+                ( notify, cmd ) =
+                    N.notify (text "Something went wrong! Try signing in again.") state.notify
+            in
+                ( { state | notify = notify }, Cmd.map Notify cmd )
 
         Written (Ok _) ->
             ( { state | isSuccessful = True }, Cmd.none )
@@ -116,6 +123,9 @@ update event state =
                     N.update msg state.notify
             in
                 ( { state | notify = notify }, Cmd.map Notify cmd )
+
+        Location loc ->
+            ( { state | loc = loc }, Cmd.none )
 
 
 toItem : Person -> Ch.Item
