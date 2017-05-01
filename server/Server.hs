@@ -78,4 +78,5 @@ main = do
   tid <- myThreadId
   let h = close conn >> putStrLn "Shutting down." >> E.throwTo tid ExitSuccess
   installHandler keyboardSignal (Catch h) Nothing
+  installHandler softwareTermination (Catch h) Nothing
   W.run p (app $ Env conn d1 d2 d3)
