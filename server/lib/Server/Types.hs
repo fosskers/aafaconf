@@ -25,7 +25,11 @@ import           Web.HttpApiData (FromHttpApiData)
 
 ---
 
-newtype Env = Env { conn :: Connection }
+data Env = Env { conn :: Connection
+               , day1 :: B.ByteString
+               , day2 :: B.ByteString
+               , day3 :: B.ByteString
+               }
 
 -- | The Content-Type @text/html@.
 data HTML

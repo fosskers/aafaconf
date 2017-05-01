@@ -29,7 +29,6 @@ type API =
   :<|> "groups"   :> Get '[HTML] B.ByteString
   :<|> "groups"   :> Capture "block" Block       :> Get '[JSON] [Person]
   :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] String
---  :<|> "test"     :> Get '[HTML] B.ByteString
   :<|> "ping"     :> Get '[PlainText] String
   :<|> "assets"   :> Raw
 
@@ -37,19 +36,14 @@ api :: Proxy API
 api = Proxy
 
 server :: Env -> Server API
-server env = file "assets/signin.html" :<|> sign env :<|> day3 env
-  :<|> file "assets/register.html" :<|> reg env
-  :<|> file "assets/groups.html" :<|> pbb env :<|> day2 env
---  :<|> file "tests.html"
+server env = pure (day3 env) :<|> sign env :<|> day3H env
+  :<|> pure (day1 env) :<|> reg env
+  :<|> pure (day2 env) :<|> pbb env :<|> day2H env
   :<|> pure "pong"
   :<|> serveDirectory "assets"
 
 app :: Env -> Application
 app = serve api . server
-
--- | Given a filepath, yield its contents as @text/html@.
-file :: FilePath -> Handler B.ByteString
-file = liftIO . B.readFile
 
 reg :: Env -> Person -> Handler String
 reg env p = liftIO (register (conn env) p) >> pure "Success"
@@ -60,19 +54,23 @@ sign env uuid = liftIO (signin (conn env) uuid) >> pure "Success"
 pbb :: Env -> Block -> Handler [Person]
 pbb env b = liftIO $ peopleByBlock (conn env) b
 
-day2 :: Env -> BlockSignin -> Handler String
-day2 env b = liftIO (blockSignin (conn env) b) >> pure "Success"
+day2H :: Env -> BlockSignin -> Handler String
+day2H env b = liftIO (blockSignin (conn env) b) >> pure "Success"
 
-day3 :: Env -> Handler [Person]
-day3 env = liftIO . day3People $ conn env
+day3H :: Env -> Handler [Person]
+day3H env = liftIO . day3People $ conn env
 
 main :: IO ()
 main = do
   putStrLn "Connecting to DB..."
   conn <- open "aafa.db"
   wake conn
+  putStrLn "Reading compiled Elm files..."
+  d1 <- B.readFile "assets/register.html"
+  d2 <- B.readFile "assets/groups.html"
+  d3 <- B.readFile "assets/signin.html"
   putStrLn "Listening for requests..."
   tid <- myThreadId
   let h = close conn >> putStrLn "Shutting down." >> E.throwTo tid ExitSuccess
   installHandler keyboardSignal (Catch h) Nothing
-  W.run 8081 (app $ Env conn)
+  W.run 8081 (app $ Env conn d1 d2 d3)
