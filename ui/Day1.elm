@@ -10,6 +10,7 @@ import Random as R
 import Ui.Button as B
 import Ui.Container as C
 import Ui.NotificationCenter as N
+import Navigation as Nav
 
 
 ---
@@ -24,6 +25,7 @@ type Event
     | Registered (Result H.Error String)
     | Submit
     | Notif N.Msg
+    | Location Nav.Location
 
 
 type alias State =
@@ -33,11 +35,12 @@ type alias State =
     , company : String
     , isSuccessful : Bool
     , notif : N.Model Event
+    , loc : Nav.Location
     }
 
 
 main =
-    Html.program
+    Nav.program Location
         { init = init
         , view = view
         , update = update
@@ -45,13 +48,13 @@ main =
         }
 
 
-init : ( State, Cmd Event )
-init =
+init : Nav.Location -> ( State, Cmd Event )
+init loc =
     let
         notif =
             N.init () |> N.timeout 5000 |> N.duration 500
     in
-        ( State "" "" "" "" False notif, Cmd.none )
+        ( State "" "" "" "" False notif loc, Cmd.none )
 
 
 update : Event -> State -> ( State, Cmd Event )
@@ -91,7 +94,7 @@ update event state =
                 person =
                     Person num state.firstName state.lastName state.city state.company Nothing Nothing Nothing False
             in
-                ( state, H.send Registered <| register "" person )
+                ( state, H.send Registered <| register state.loc.origin person )
 
         Registered (Err _) ->
             let
@@ -109,6 +112,9 @@ update event state =
                     N.update msg state.notif
             in
                 ( { state | notif = notif }, Cmd.map Notif cmd )
+
+        Location loc ->
+            ( { state | loc = loc }, Cmd.none )
 
 
 view : State -> Html Event

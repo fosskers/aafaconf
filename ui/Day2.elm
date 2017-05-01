@@ -7,6 +7,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http as H
 import Maybe as M
+import Navigation as Nav
 import Set
 import Ui.Button as B
 import Ui.Chooser as Ch
@@ -26,7 +27,7 @@ type Event
     | Written (Result H.Error String)
     | Notify N.Msg
     | Submit
-    | Back
+    | Location Nav.Location
 
 
 type alias State =
@@ -37,11 +38,12 @@ type alias State =
     , isSuccessful : Bool
     , chooser : Ch.Model
     , notify : N.Model Event
+    , loc : Nav.Location
     }
 
 
 main =
-    Html.program
+    Nav.program Location
         { init = init
         , view = view
         , update = update
@@ -49,8 +51,8 @@ main =
         }
 
 
-init : ( State, Cmd Event )
-init =
+init : Nav.Location -> ( State, Cmd Event )
+init loc =
     let
         chooser =
             Ch.init ()
@@ -62,7 +64,7 @@ init =
         notify =
             N.init () |> N.timeout 5000 |> N.duration 500
     in
-        ( State Nothing Nothing [] [] False chooser notify, Cmd.none )
+        ( State Nothing Nothing [] [] False chooser notify loc, Cmd.none )
 
 
 update : Event -> State -> ( State, Cmd Event )
@@ -70,7 +72,7 @@ update event state =
     case event of
         Block letter ->
             ( { state | blockClicked = Just letter }
-            , H.send Rtn <| peopleFromBlock "" letter
+            , H.send Rtn <| peopleFromBlock state.loc.origin letter
             )
 
         Topic name ->
@@ -127,7 +129,7 @@ update event state =
                     blockSignin =
                         BlockSignin block topic group
                 in
-                    ( state, H.send Written <| groups "" blockSignin )
+                    ( state, H.send Written <| groups state.loc.origin blockSignin )
 
         Written (Err _) ->
             let
@@ -146,8 +148,8 @@ update event state =
             in
                 ( { state | notify = notify }, Cmd.map Notify cmd )
 
-        Back ->
-            init
+        Location loc ->
+            ( { state | loc = loc }, Cmd.none )
 
 
 toItem : Person -> Ch.Item
@@ -210,8 +212,7 @@ blockPage state =
 
 errorPage : Html Event
 errorPage =
-    C.rowCenter [] [ text "Error", B.model "Back" "primary" "small" |> B.view Back ]
-
+    C.rowCenter [] [ text "Error" ]
 
 
 topicPage : State -> Block -> Html Event
@@ -226,7 +227,8 @@ topicPage state block =
             , B.model "VMS" "primary" "big" |> B.view (Topic "VMS")
             , B.model "Systems" "primary" "big" |> B.view (Topic "Systems")
             , B.model "Structures for Growth" "primary" "big" |> B.view (Topic "Structures for Growth")
---            , B.model "Back" "primary" "small" |> B.view Back
+
+            --            , B.model "Back" "primary" "small" |> B.view Back
             , N.view Notify state.notify
             ]
         ]

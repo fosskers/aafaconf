@@ -1,15 +1,17 @@
 module Day3 exposing (..)
 
+import Calls exposing (..)
+import Helpers exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Helpers exposing (..)
-import Ui.Button as B
-import Ui.Container as C
 import Http as H
-import Calls exposing (..)
-import Ui.Chooser as Ch
+import Navigation as Nav
 import Set
+import Ui.Button as B
+import Ui.Chooser as Ch
+import Ui.Container as C
+import Ui.NotificationCenter as N
 
 
 ---
@@ -20,16 +22,20 @@ type Event
     | SignIn
     | Written (Result H.Error String)
     | FirstList (Result H.Error (List Person))
+    | Notify N.Msg
+    | Location Nav.Location
 
 
 type alias State =
     { chooser : Ch.Model
     , isSuccessful : Bool
+    , notify : N.Model Event
+    , loc : Nav.Location
     }
 
 
 main =
-    Html.program
+    Nav.program Location
         { init = init
         , view = view
         , update = update
@@ -37,17 +43,20 @@ main =
         }
 
 
-init : ( State, Cmd Event )
-init =
+init : Nav.Location -> ( State, Cmd Event )
+init loc =
     let
         chooser =
             Ch.init ()
                 |> Ch.placeholder "Begin typing last name..."
                 |> Ch.searchable True
                 |> Ch.closeOnSelect True
+
+        notify =
+            N.init () |> N.timeout 5000 |> N.duration 500
     in
-        ( State chooser False
-        , H.send FirstList <| day3People ""
+        ( State chooser False notify loc
+        , H.send FirstList <| day3People loc.origin
         )
 
 
@@ -64,7 +73,11 @@ update event state =
                 )
 
         FirstList (Err _) ->
-            ( state, Cmd.none )
+            let
+                ( notify, cmd ) =
+                    N.notify (text "Something went wrong! Try refreshing the page.") state.notify
+            in
+                ( { state | notify = notify }, Cmd.map Notify cmd )
 
         FirstList (Ok ppl) ->
             let
@@ -79,22 +92,40 @@ update event state =
 
         SignIn ->
             if Set.isEmpty state.chooser.selected then
-                ( state, Cmd.none )
+                let
+                    ( notify, cmd ) =
+                        N.notify (text "Please select your name to sign in.") state.notify
+                in
+                    ( { state | notify = notify }, Cmd.map Notify cmd )
             else
                 ( state
-                , H.send Written <|
-                    signin "" <|
-                        Result.withDefault 0 <|
-                            String.toInt <|
-                                Maybe.withDefault "0" <|
-                                    Ch.getFirstSelected state.chooser
+                , Ch.getFirstSelected state.chooser
+                    |> Maybe.withDefault "0"
+                    |> String.toInt
+                    |> Result.withDefault 0
+                    |> signin state.loc.origin
+                    |> H.send Written
                 )
 
         Written (Err _) ->
-            ( state, Cmd.none )
+            let
+                ( notify, cmd ) =
+                    N.notify (text "Something went wrong! Try signing in again.") state.notify
+            in
+                ( { state | notify = notify }, Cmd.map Notify cmd )
 
         Written (Ok _) ->
             ( { state | isSuccessful = True }, Cmd.none )
+
+        Notify msg ->
+            let
+                ( notify, cmd ) =
+                    N.update msg state.notify
+            in
+                ( { state | notify = notify }, Cmd.map Notify cmd )
+
+        Location loc ->
+            ( { state | loc = loc }, Cmd.none )
 
 
 toItem : Person -> Ch.Item
@@ -129,5 +160,6 @@ signInLayout state =
                 , h4 [] [ text "Please sign in below." ]
                 , Html.map Choosing <| Ch.view state.chooser
                 , B.model "Sign In" "primary" "medium" |> B.view SignIn
+                , N.view Notify state.notify
                 ]
             ]
