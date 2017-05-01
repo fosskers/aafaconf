@@ -22,26 +22,29 @@ import           System.Posix.Signals hiding (Handler)
 ---
 
 type API =
-       "signin"   :> Get '[HTML] B.ByteString
-  :<|> "signin"   :> ReqBody '[JSON] Int         :> Post '[JSON] String
-  :<|> "everyone" :> Get '[JSON] [Person]
-  :<|> "register" :> Get '[HTML] B.ByteString
+       "register" :> Get '[HTML] B.ByteString
   :<|> "register" :> ReqBody '[JSON] Person      :> Post '[JSON] String
   :<|> "groups"   :> Get '[HTML] B.ByteString
   :<|> "groups"   :> Capture "block" Block       :> Get '[JSON] [Person]
   :<|> "groups"   :> ReqBody '[JSON] BlockSignin :> Post '[JSON] String
+  :<|> "signin"   :> Get '[HTML] B.ByteString
+  :<|> "signin"   :> ReqBody '[JSON] Int         :> Post '[JSON] String
+  :<|> "everyone" :> Get '[JSON] [Person]
   :<|> "ping"     :> Get '[PlainText] String
   :<|> "assets"   :> Raw
+  :<|> Get '[HTML] B.ByteString
 
 api :: Proxy API
 api = Proxy
 
 server :: Env -> Server API
-server env = pure (day3 env) :<|> sign env :<|> day3H env
-  :<|> pure (day1 env) :<|> reg env
+server env =
+       pure (day1 env) :<|> reg env
   :<|> pure (day2 env) :<|> pbb env :<|> day2H env
+  :<|> pure (day3 env) :<|> sign env :<|> day3H env
   :<|> pure "pong"
   :<|> serveDirectory "assets"
+  :<|> pure (day1 env)
 
 app :: Env -> Application
 app = serve api . server
