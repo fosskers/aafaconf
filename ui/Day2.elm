@@ -1,5 +1,9 @@
 module Day2 exposing (..)
 
+import Bootstrap.Button as BB
+import Bootstrap.Grid as G
+import Bootstrap.Grid.Col as GC
+import Bootstrap.Grid.Row as GR
 import Calls exposing (..)
 import Helpers exposing (..)
 import Html exposing (..)
@@ -16,7 +20,7 @@ import Ui.Layout as L
 import Ui.NotificationCenter as N
 
 
---
+---
 
 
 type Event
@@ -200,36 +204,87 @@ content state =
 
 blockPage : State -> Html Event
 blockPage state =
-    C.rowCenter [ style [ ( "padding-top", "15%" ) ] ]
-        [ C.columnCenter []
-            [ B.model "A 9AM - 10:15AM" "primary" "big" |> B.view (Block A)
-            , B.model "B 10:30AM - 11:45AM" "primary" "big" |> B.view (Block B)
-            , B.model "C 12PM - 1:15PM" "primary" "big" |> B.view (Block C)
-            , N.view Notify state.notify
+    G.container [ style [ ( "padding-top", "5%" ) ] ]
+        [ G.row [ GR.centerXs ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button [ BB.primary, BB.block, BB.attrs [ onClick <| Block A ] ]
+                    [ h1 [] [ text "A" ]
+                    , text "9am - 10:15am"
+                    ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button [ BB.success, BB.block, BB.attrs [ onClick <| Block B ] ]
+                    [ h1 [] [ text "B" ]
+                    , text "10:30am - 11:45am"
+                    ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button [ BB.info, BB.block, BB.attrs [ onClick <| Block C ] ]
+                    [ h1 [] [ text "C" ]
+                    , text "12pm - 1:15pm"
+                    ]
+                ]
             ]
         ]
 
 
 errorPage : Html Event
 errorPage =
-    C.rowCenter [] [ text "Error" ]
+    text "Error"
 
 
 topicPage : State -> Block -> Html Event
 topicPage state block =
-    C.rowCenter [ style [ ( "padding-top", "5%" ) ] ]
-        [ C.columnCenter []
-            [ h1 [] [ text <| "Block " ++ toString block ]
-            , h3 [] [ i [] [ text "Choose your session topic." ] ]
-            , B.model "Tough Decisions" "primary" "big" |> B.view (Topic "Tough Decisions")
-            , B.model "Retention & Culture" "primary" "big" |> B.view (Topic "Retention & Culture")
-            , B.model "Business Development" "primary" "big" |> B.view (Topic "Business Development")
-            , B.model "VMS" "primary" "big" |> B.view (Topic "VMS")
-            , B.model "Systems" "primary" "big" |> B.view (Topic "Systems")
-            , B.model "Structures for Growth" "primary" "big" |> B.view (Topic "Structures for Growth")
-
-            --            , B.model "Back" "primary" "small" |> B.view Back
-            , N.view Notify state.notify
+    G.container [ style [ ( "padding-top", "5%" ) ] ]
+        [ G.row [ GR.centerXs ]
+            [ G.col [ GC.xs8 ] [ h1 [] [ text <| "Block " ++ toString block ] ] ]
+        , G.row [ GR.centerXs ]
+            [ G.col [ GC.xs8 ] [ h3 [] [ i [] [ text "Choose your session topic." ] ] ] ]
+        , G.row [ GR.centerXs ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Tough Decisions" ] ]
+                    [ text "Tough Decisions" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Retention & Culture" ] ]
+                    [ text "Retention & Culture" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Business Development" ] ]
+                    [ text "Business Development" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "VMS" ] ]
+                    [ text "VMS" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Systems" ] ]
+                    [ text "Systems" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Structures for Growth" ] ]
+                    [ text "Structures for Growth" ]
+                ]
             ]
         ]
 
