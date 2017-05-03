@@ -2,10 +2,10 @@ STACK ?= /bin/stack
 PORT ?= 8081
 
 elm:
-	cd ui/  && elm-make Day1.elm --output register.html \
-		&& elm-make Day2.elm --output groups.html \
-		&& elm-make Day3.elm --output signin.html \
-		&& mv *.html ../assets/
+	cd ui/  && elm-make Day1.elm --output register.js \
+		&& elm-make Day2.elm --output groups.js \
+		&& elm-make Day3.elm --output signin.js \
+		&& mv *.js ../assets/
 
 build: elm
 	cd server/ && $(STACK) build
