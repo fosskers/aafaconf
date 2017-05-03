@@ -134,9 +134,8 @@ formLayout state =
     if state.isSuccessful then
         centered [ h1 [] [ text <| "Thanks for registering, " ++ state.firstName ++ "!" ] ]
     else
-        G.container [ style [("padding-top", "5%")]]
-            [ CDN.stylesheet
-            , G.row [ GR.centerXs ]
+        G.container [ style [ ( "padding-top", "5%" ) ] ]
+            [ G.row [ GR.centerXs ]
                 [ G.col [ GC.xs10, GC.lg6 ]
                     [ div [] [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ] ] ]
                 ]
