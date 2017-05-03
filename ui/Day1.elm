@@ -1,7 +1,6 @@
 module Day1 exposing (..)
 
 import Bootstrap.Button as BB
-import Bootstrap.CDN as CDN
 import Bootstrap.Form as BF
 import Bootstrap.Form.Input as BI
 import Bootstrap.Grid as G
@@ -15,8 +14,6 @@ import Html.Events exposing (..)
 import Http as H
 import Navigation as Nav
 import Random as R
-import Ui.Button as B
-import Ui.Container as C
 import Ui.NotificationCenter as N
 
 
