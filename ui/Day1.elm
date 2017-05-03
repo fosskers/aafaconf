@@ -1,16 +1,23 @@
 module Day1 exposing (..)
 
+import Bootstrap.Button as BB
+import Bootstrap.CDN as CDN
+import Bootstrap.Form as BF
+import Bootstrap.Form.Input as BI
+import Bootstrap.Grid as G
+import Bootstrap.Grid.Col as GC
+import Bootstrap.Grid.Row as GR
 import Calls exposing (..)
 import Helpers exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http as H
+import Navigation as Nav
 import Random as R
 import Ui.Button as B
 import Ui.Container as C
 import Ui.NotificationCenter as N
-import Navigation as Nav
 
 
 ---
@@ -127,13 +134,40 @@ formLayout state =
     if state.isSuccessful then
         centered [ h1 [] [ text <| "Thanks for registering, " ++ state.firstName ++ "!" ] ]
     else
-        centered
-            [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ]
-            , h5 [] [ text "Please register below." ]
-            , div [] [ input [ placeholder "First Name", onInput Fname, maxlength 50 ] [] ]
-            , div [] [ input [ placeholder "Last Name", onInput Lname, maxlength 50 ] [] ]
-            , div [] [ input [ placeholder "City", onInput City, maxlength 50 ] [] ]
-            , div [] [ input [ placeholder "Company", onInput Company, maxlength 50 ] [] ]
-            , B.model "Submit" "primary" "medium" |> B.view Submit
-            , N.view Notif state.notif
+        G.container [ style [("padding-top", "5%")]]
+            [ CDN.stylesheet
+            , G.row [ GR.centerXs ]
+                [ G.col [ GC.xs10, GC.lg6 ]
+                    [ div [] [ h3 [] [ text "Welcome to AAFA Santa Monica 2017!" ] ] ]
+                ]
+            , G.row [ GR.centerXs ]
+                [ G.col [ GC.xs10, GC.lg6 ] [ h5 [] [ text "Please register below." ] ] ]
+            , G.row [ GR.centerXs ]
+                [ G.col [ GC.xs10, GC.lg6 ] [ form, N.view Notif state.notif ] ]
+            , G.row [ GR.centerXs ]
+                [ G.col [ GC.xs10, GC.lg6 ]
+                    [ BB.button [ BB.primary, BB.block, BB.attrs [ onClick Submit ] ] [ text "Submit" ] ]
+                ]
             ]
+
+
+form : Html Event
+form =
+    BF.form []
+        [ BF.group []
+            [ BF.label [ for "i-fname" ] [ text "First Name" ]
+            , BI.text [ BI.id "i-fname", BI.onInput Fname ]
+            ]
+        , BF.group []
+            [ BF.label [ for "i-lname" ] [ text "Last Name" ]
+            , BI.text [ BI.id "i-lname", BI.onInput Lname ]
+            ]
+        , BF.group []
+            [ BF.label [ for "i-city" ] [ text "City" ]
+            , BI.text [ BI.id "i-city", BI.onInput City ]
+            ]
+        , BF.group []
+            [ BF.label [ for "i-company" ] [ text "Company" ]
+            , BI.text [ BI.id "i-company", BI.onInput Company ]
+            ]
+        ]
