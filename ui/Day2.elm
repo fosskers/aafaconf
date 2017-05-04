@@ -209,7 +209,7 @@ blockPage state =
             [ G.col [ GC.xs8 ]
                 [ BB.button [ BB.primary, BB.block, BB.attrs [ onClick <| Block A ] ]
                     [ h1 [] [ text "A" ]
-                    , text "9am - 10:15am"
+                    , text "8:30am - 9:45am"
                     ]
                 ]
             ]
@@ -217,7 +217,7 @@ blockPage state =
             [ G.col [ GC.xs8 ]
                 [ BB.button [ BB.success, BB.block, BB.attrs [ onClick <| Block B ] ]
                     [ h1 [] [ text "B" ]
-                    , text "10:30am - 11:45am"
+                    , text "10:00am - 11:15am"
                     ]
                 ]
             ]
@@ -225,7 +225,7 @@ blockPage state =
             [ G.col [ GC.xs8 ]
                 [ BB.button [ BB.info, BB.block, BB.attrs [ onClick <| Block C ] ]
                     [ h1 [] [ text "C" ]
-                    , text "12pm - 1:15pm"
+                    , text "11:30pm - 12:45pm"
                     ]
                 ]
             ]
