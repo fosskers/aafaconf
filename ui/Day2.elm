@@ -1,31 +1,33 @@
 module Day2 exposing (..)
 
+import Bootstrap.Button as BB
+import Bootstrap.Form.Input as BI
+import Bootstrap.Grid as G
+import Bootstrap.Grid.Col as GC
+import Bootstrap.Grid.Row as GR
 import Calls exposing (..)
+import Dict
 import Helpers exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http as H
-import Maybe as M
 import Navigation as Nav
-import Set
-import Ui.Button as B
-import Ui.Chooser as Ch
-import Ui.Container as C
-import Ui.Layout as L
 import Ui.NotificationCenter as N
 
 
---
+---
 
 
 type Event
     = Block Block
     | Topic String
     | Rtn (Result H.Error (List Person))
-    | Choosing Ch.Msg
     | Written (Result H.Error String)
     | Notify N.Msg
+    | Typed String
+    | Chosen Person
+    | Cancelled Person
     | Submit
     | Location Nav.Location
 
@@ -34,9 +36,9 @@ type alias State =
     { blockClicked : Maybe Block
     , topicClicked : Maybe String
     , everybody : List Person
-    , currentSelected : List Person
+    , selected : Dict.Dict Int Person
+    , typed : String
     , isSuccessful : Bool
-    , chooser : Ch.Model
     , notify : N.Model Event
     , loc : Nav.Location
     }
@@ -54,17 +56,10 @@ main =
 init : Nav.Location -> ( State, Cmd Event )
 init loc =
     let
-        chooser =
-            Ch.init ()
-                |> Ch.placeholder "Begin typing last name..."
-                |> Ch.searchable True
-                |> Ch.closeOnSelect True
-                |> Ch.multiple True
-
         notify =
             N.init () |> N.timeout 5000 |> N.duration 500
     in
-        ( State Nothing Nothing [] [] False chooser notify loc, Cmd.none )
+        ( State Nothing Nothing [] Dict.empty "" False notify loc, Cmd.none )
 
 
 update : Event -> State -> ( State, Cmd Event )
@@ -86,28 +81,10 @@ update event state =
                 ( { state | notify = notify }, Cmd.map Notify cmd )
 
         Rtn (Ok ppl) ->
-            let
-                listItems =
-                    List.map toItem ppl
-            in
-                ( { state
-                    | everybody = ppl
-                    , chooser = Ch.items listItems state.chooser
-                  }
-                , Cmd.none
-                )
-
-        Choosing select ->
-            let
-                ( updatedChooser, cmd ) =
-                    Ch.update select state.chooser
-            in
-                ( { state | chooser = updatedChooser }
-                , Cmd.map Choosing cmd
-                )
+            ( { state | everybody = ppl }, Cmd.none )
 
         Submit ->
-            if Set.isEmpty state.chooser.selected then
+            if Dict.isEmpty state.selected then
                 let
                     ( notify, cmd ) =
                         N.notify (text "Please select the attendees before you Submit.") state.notify
@@ -116,18 +93,13 @@ update event state =
             else
                 let
                     block =
-                        M.withDefault A state.blockClicked
+                        Maybe.withDefault A state.blockClicked
 
                     topic =
-                        M.withDefault "Ass Kissing" state.topicClicked
-
-                    group =
-                        state.chooser.selected
-                            |> Set.map (\n -> Result.withDefault 0 <| String.toInt n)
-                            |> Set.toList
+                        Maybe.withDefault "Ass Kissing" state.topicClicked
 
                     blockSignin =
-                        BlockSignin block topic group
+                        BlockSignin block topic <| Dict.keys state.selected
                 in
                     ( state, H.send Written <| groups state.loc.origin blockSignin )
 
@@ -148,30 +120,22 @@ update event state =
             in
                 ( { state | notify = notify }, Cmd.map Notify cmd )
 
+        Typed s ->
+            ( { state | typed = s }, Cmd.none )
+
+        Chosen p ->
+            ( { state | selected = Dict.insert p.uuid p state.selected }, Cmd.none )
+
+        Cancelled p ->
+            ( { state | selected = Dict.remove p.uuid state.selected }, Cmd.none )
+
         Location loc ->
             ( { state | loc = loc }, Cmd.none )
-
-
-toItem : Person -> Ch.Item
-toItem p =
-    { label = p.fname ++ " " ++ p.lname
-    , value = toString p.uuid
-    , id = toString p.uuid
-    }
 
 
 subscriptions : State -> Sub Event
 subscriptions _ =
     Sub.none
-
-
-centerStyle : Attribute Event
-centerStyle =
-    style
-        [ ( "display", "flex" )
-        , ( "justify-content", "center" )
-        , ( "align-items", "center" )
-        ]
 
 
 view : State -> Html Event
@@ -200,48 +164,136 @@ content state =
 
 blockPage : State -> Html Event
 blockPage state =
-    C.rowCenter [ style [ ( "padding-top", "15%" ) ] ]
-        [ C.columnCenter []
-            [ B.model "A 9AM - 10:15AM" "primary" "big" |> B.view (Block A)
-            , B.model "B 10:30AM - 11:45AM" "primary" "big" |> B.view (Block B)
-            , B.model "C 12PM - 1:15PM" "primary" "big" |> B.view (Block C)
-            , N.view Notify state.notify
+    G.container [ style [ ( "padding-top", "5%" ) ] ]
+        [ G.row [ GR.centerXs ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button [ BB.primary, BB.block, BB.attrs [ onClick <| Block A ] ]
+                    [ h1 [] [ text "A" ]
+                    , text "8:30am - 9:45am"
+                    ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button [ BB.success, BB.block, BB.attrs [ onClick <| Block B ] ]
+                    [ h1 [] [ text "B" ]
+                    , text "10:00am - 11:15am"
+                    ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button [ BB.info, BB.block, BB.attrs [ onClick <| Block C ] ]
+                    [ h1 [] [ text "C" ]
+                    , text "11:30pm - 12:45pm"
+                    ]
+                ]
             ]
         ]
 
 
 errorPage : Html Event
 errorPage =
-    C.rowCenter [] [ text "Error" ]
+    text "Error"
 
 
 topicPage : State -> Block -> Html Event
 topicPage state block =
-    C.rowCenter [ style [ ( "padding-top", "5%" ) ] ]
-        [ C.columnCenter []
-            [ h1 [] [ text <| "Block " ++ toString block ]
-            , h3 [] [ i [] [ text "Choose your session topic." ] ]
-            , B.model "Tough Decisions" "primary" "big" |> B.view (Topic "Tough Decisions")
-            , B.model "Retention & Culture" "primary" "big" |> B.view (Topic "Retention & Culture")
-            , B.model "Business Development" "primary" "big" |> B.view (Topic "Business Development")
-            , B.model "VMS" "primary" "big" |> B.view (Topic "VMS")
-            , B.model "Systems" "primary" "big" |> B.view (Topic "Systems")
-            , B.model "Structures for Growth" "primary" "big" |> B.view (Topic "Structures for Growth")
-
-            --            , B.model "Back" "primary" "small" |> B.view Back
-            , N.view Notify state.notify
+    G.container [ style [ ( "padding-top", "5%" ) ] ]
+        [ G.row [ GR.centerXs ]
+            [ G.col [ GC.xs8 ] [ h1 [] [ text <| "Block " ++ toString block ] ] ]
+        , G.row [ GR.centerXs ]
+            [ G.col [ GC.xs8 ] [ h3 [] [ i [] [ text "Choose your session topic." ] ] ] ]
+        , G.row [ GR.centerXs ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Tough Decisions" ] ]
+                    [ text "Tough Decisions" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Retention & Culture" ] ]
+                    [ text "Retention & Culture" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Business Development" ] ]
+                    [ text "Business Development" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "VMS" ] ]
+                    [ text "VMS" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Systems" ] ]
+                    [ text "Systems" ]
+                ]
+            ]
+        , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+            [ G.col [ GC.xs8 ]
+                [ BB.button
+                    [ BB.info, BB.block, BB.attrs [ onClick <| Topic "Structures for Growth" ] ]
+                    [ text "Structures for Growth" ]
+                ]
             ]
         ]
 
 
 chooserPage : State -> String -> Html Event
 chooserPage state topic =
-    C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
-        [ C.columnCenter []
-            [ h2 [] [ text topic ]
-            , i [] [ text "Please select group members from the dropdown menu." ]
-            , Html.map Choosing <| Ch.view state.chooser
-            , B.model "Submit Group" "primary" "medium" |> B.view Submit
-            , N.view Notify state.notify
+    let
+        matches =
+            if String.length state.typed >= 3 then
+                List.map (buttonify Chosen) <| List.filter (isMatch state) state.everybody
+            else
+                []
+    in
+        G.container [ style [ ( "padding-top", "5%" ) ] ]
+            [ G.row [ GR.centerXs ]
+                [ G.col []
+                    [ h2 [] [ text topic ], N.view Notify state.notify ]
+                ]
+            , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                [ G.col []
+                    [ i [] [ text "Please type the last name of a group member, and select them as matches appear." ] ]
+                ]
+            , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                [ G.col []
+                    [ BI.text [ BI.id "lname", BI.onInput Typed ] ]
+                ]
+            , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                [ G.col [] matches ]
+            , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                [ G.col []
+                    [ h4 [] [ text "Your group:" ]
+                    , i [] [ text "You can reclick someone to remove them." ]
+                    ]
+                ]
+            , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                [ G.col [] <| List.map (buttonify Cancelled) <| Dict.values state.selected ]
+            , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                [ G.col [ GC.xs6 ]
+                    [ BB.button [ BB.primary, BB.block, BB.attrs [ onClick Submit ] ] [ text "Submit" ] ]
+                ]
             ]
-        ]
+
+
+isMatch : State -> Person -> Bool
+isMatch state p =
+    not (Dict.member p.uuid state.selected)
+        && String.contains (String.toLower state.typed) (String.toLower p.lname)
+
+
+buttonify : (Person -> Event) -> Person -> Html Event
+buttonify f p =
+    BB.button [ BB.info, BB.attrs [ onClick <| f p ] ] [ text <| p.fname ++ " " ++ p.lname ]
