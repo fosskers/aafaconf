@@ -134,7 +134,7 @@ signInLayout state =
                     ]
                 , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
                     [ G.col []
-                        [ i [] [ text "To sign in, please type your LAST NAME in the field below and click your name when it appears." ] ]
+                        [ i [] [ text "To sign in, please type your name in the field below and click your name when it appears." ] ]
                     ]
                 , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
                     [ G.col []
@@ -147,7 +147,7 @@ signInLayout state =
 
 isMatch : State -> Person -> Bool
 isMatch state p =
-    String.contains (String.toLower state.name) (String.toLower p.lname)
+    String.contains (String.toLower state.name) (String.toLower (p.fname ++ p.lname))
 
 
 buttonify : (Person -> Event) -> Person -> Html Event

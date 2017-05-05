@@ -265,7 +265,7 @@ chooserPage state topic =
                 ]
             , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
                 [ G.col []
-                    [ i [] [ text "Please type the last name of a group member, and select them as matches appear." ] ]
+                    [ i [] [ text "Please type the name of a group member, and select them as matches appear." ] ]
                 ]
             , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
                 [ G.col []
@@ -291,7 +291,7 @@ chooserPage state topic =
 isMatch : State -> Person -> Bool
 isMatch state p =
     not (Dict.member p.uuid state.selected)
-        && String.contains (String.toLower state.typed) (String.toLower p.lname)
+        && String.contains (String.toLower state.typed) (String.toLower (p.fname ++ p.lname))
 
 
 buttonify : (Person -> Event) -> Person -> Html Event
