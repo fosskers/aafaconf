@@ -9,7 +9,6 @@ import Http as H
 import Navigation as Nav
 import Set
 import Ui.Button as B
-import Ui.Chooser as Ch
 import Ui.Container as C
 import Ui.NotificationCenter as N
 
@@ -18,19 +17,20 @@ import Ui.NotificationCenter as N
 
 
 type Event
-    = Choosing Ch.Msg
-    | SignIn
+    = Typed String
     | Written (Result H.Error String)
     | FirstList (Result H.Error (List Person))
     | Notify N.Msg
     | Location Nav.Location
+    | Chosen Person
 
 
 type alias State =
-    { chooser : Ch.Model
-    , isSuccessful : Bool
+    { isSuccessful : Bool
     , notify : N.Model Event
     , loc : Nav.Location
+    , name : String
+    , firstList : List Person
     }
 
 
@@ -46,16 +46,10 @@ main =
 init : Nav.Location -> ( State, Cmd Event )
 init loc =
     let
-        chooser =
-            Ch.init ()
-                |> Ch.placeholder "Begin typing last name..."
-                |> Ch.searchable True
-                |> Ch.closeOnSelect True
-
         notify =
             N.init () |> N.timeout 5000 |> N.duration 500
     in
-        ( State chooser False notify loc
+        ( State False notify loc "" []
         , H.send FirstList <| day3People loc.origin
         )
 
@@ -63,15 +57,6 @@ init loc =
 update : Event -> State -> ( State, Cmd Event )
 update event state =
     case event of
-        Choosing select ->
-            let
-                ( updatedChooser, cmd ) =
-                    Ch.update select state.chooser
-            in
-                ( { state | chooser = updatedChooser }
-                , Cmd.map Choosing cmd
-                )
-
         FirstList (Err _) ->
             let
                 ( notify, cmd ) =
@@ -80,32 +65,10 @@ update event state =
                 ( { state | notify = notify }, Cmd.map Notify cmd )
 
         FirstList (Ok ppl) ->
-            let
-                listItems =
-                    List.map toItem ppl
-            in
-                ( { state
-                    | chooser = Ch.items listItems state.chooser
-                  }
-                , Cmd.none
-                )
+            ( { state | firstList = ppl }, Cmd.none )
 
-        SignIn ->
-            if Set.isEmpty state.chooser.selected then
-                let
-                    ( notify, cmd ) =
-                        N.notify (text "Please select your name to sign in.") state.notify
-                in
-                    ( { state | notify = notify }, Cmd.map Notify cmd )
-            else
-                ( state
-                , Ch.getFirstSelected state.chooser
-                    |> Maybe.withDefault "0"
-                    |> String.toInt
-                    |> Result.withDefault 0
-                    |> signin state.loc.origin
-                    |> H.send Written
-                )
+        Typed n ->
+            ( { state | name = n }, Cmd.none )
 
         Written (Err _) ->
             let
@@ -127,13 +90,18 @@ update event state =
         Location loc ->
             ( { state | loc = loc }, Cmd.none )
 
+        Chosen p ->
+            ( state, H.send Written <| signin state.loc.origin p.uuid )
 
-toItem : Person -> Ch.Item
-toItem p =
-    { label = p.fname ++ " " ++ p.lname
-    , value = toString p.uuid
-    , id = toString p.uuid
-    }
+
+
+{- toItem : Person -> Ch.Item
+   toItem p =
+       { label = p.fname ++ " " ++ p.lname
+       , value = toString p.uuid
+       , id = toString p.uuid
+       }
+-}
 
 
 subscriptions : State -> Sub Event
@@ -157,9 +125,22 @@ signInLayout state =
         C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
             [ C.columnCenter []
                 [ h3 [] [ text "Welcome to Day 3 of the AAFA Conference!" ]
-                , h4 [] [ text "Please sign in below." ]
-                , Html.map Choosing <| Ch.view state.chooser
-                , B.model "Sign In" "primary" "medium" |> B.view SignIn
+                , i [] [ text "To sign in, please type your LAST NAME in the field below and click your name when it appears." ]
+                , input [ onInput Typed, placeholder "Begin typing last name..." ] []
+                , if String.length state.name >= 3 then
+                    let
+                        matches =
+                            List.map (buttonify Chosen) <|
+                                List.filter (\p -> String.contains (String.toLower state.name) (String.toLower p.lname)) state.firstList
+                    in
+                        div [] matches
+                  else
+                    text ""
                 , N.view Notify state.notify
                 ]
             ]
+
+
+buttonify : (Person -> Event) -> Person -> Html Event
+buttonify f p =
+    button [ onClick <| f p ] [ text <| p.fname ++ " " ++ p.lname ]
