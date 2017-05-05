@@ -1,5 +1,10 @@
 module Day3 exposing (..)
 
+import Bootstrap.Button as BB
+import Bootstrap.Form.Input as BI
+import Bootstrap.Grid as G
+import Bootstrap.Grid.Col as GC
+import Bootstrap.Grid.Row as GR
 import Calls exposing (..)
 import Helpers exposing (..)
 import Html exposing (..)
@@ -8,7 +13,6 @@ import Html.Events exposing (..)
 import Http as H
 import Navigation as Nav
 import Set
-import Ui.Button as B
 import Ui.Container as C
 import Ui.NotificationCenter as N
 
@@ -94,16 +98,6 @@ update event state =
             ( state, H.send Written <| signin state.loc.origin p.uuid )
 
 
-
-{- toItem : Person -> Ch.Item
-   toItem p =
-       { label = p.fname ++ " " ++ p.lname
-       , value = toString p.uuid
-       , id = toString p.uuid
-       }
--}
-
-
 subscriptions : State -> Sub Event
 subscriptions _ =
     Sub.none
@@ -122,25 +116,40 @@ signInLayout state =
                 [ h1 [] [ text <| "Thanks for signing in!" ] ]
             ]
     else
-        C.rowCenter [ style [ ( "padding-top", "10%" ) ] ]
-            [ C.columnCenter []
-                [ h3 [] [ text "Welcome to Day 3 of the AAFA Conference!" ]
-                , i [] [ text "To sign in, please type your LAST NAME in the field below and click your name when it appears." ]
-                , input [ onInput Typed, placeholder "Begin typing last name..." ] []
-                , if String.length state.name >= 3 then
-                    let
-                        matches =
-                            List.map (buttonify Chosen) <|
-                                List.filter (\p -> String.contains (String.toLower state.name) (String.toLower p.lname)) state.firstList
-                    in
-                        div [] matches
-                  else
-                    text ""
-                , N.view Notify state.notify
+        let
+            matches =
+                if String.length state.name >= 3 then
+                    List.map (buttonify Chosen) <| List.filter (isMatch state) state.firstList
+                else
+                    []
+        in
+            G.container [ style [ ( "padding-top", "5%" ) ] ]
+                [ G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                    [ G.col []
+                        [ h3 []
+                            [ text "Welcome to Day 3 of the AAFA Conference!"
+                            , N.view Notify state.notify
+                            ]
+                        ]
+                    ]
+                , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                    [ G.col []
+                        [ i [] [ text "To sign in, please type your LAST NAME in the field below and click your name when it appears." ] ]
+                    ]
+                , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                    [ G.col []
+                        [ BI.text [ BI.id "thing", BI.onInput Typed ] ]
+                    ]
+                , G.row [ GR.centerXs, GR.attrs [ style [ ( "padding-top", "10px" ) ] ] ]
+                    [ G.col [] matches ]
                 ]
-            ]
+
+
+isMatch : State -> Person -> Bool
+isMatch state p =
+    String.contains (String.toLower state.name) (String.toLower p.lname)
 
 
 buttonify : (Person -> Event) -> Person -> Html Event
 buttonify f p =
-    button [ onClick <| f p ] [ text <| p.fname ++ " " ++ p.lname ]
+    BB.button [ BB.info, BB.attrs [ onClick <| f p ] ] [ text <| p.fname ++ " " ++ p.lname ]
